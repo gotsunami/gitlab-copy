@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -18,10 +19,38 @@ func map2human(m map[string]int) string {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("missing config file")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, fmt.Sprintf("Usage: %s [options] configfile\n", os.Args[0]))
+		fmt.Fprintf(os.Stderr, `Where configfile holds YAML data like:
+from:
+    url: https://gitlab.outofpluto.com/api/v3
+    token: atoken
+    project: namespace/myproject
+to:
+    url: https://gitlab.outofpluto.com/api/v3
+    token: anothertoken
+    project: namespace/thisproject
+
+Options:
+`)
+		flag.PrintDefaults()
+		os.Exit(2)
 	}
-	c, err := parseConfig(os.Args[1])
+
+	apply := flag.Bool("y", false, "apply migration for real")
+	version := flag.Bool("version", false, "")
+	flag.Parse()
+
+	if *version {
+		fmt.Printf("version: %s\n", "too")
+		os.Exit(0)
+	}
+
+	if len(flag.Args()) != 1 {
+		fmt.Fprint(os.Stderr, "Config file is missing.\n\n")
+		flag.Usage()
+	}
+	c, err := parseConfig(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,13 +101,17 @@ func main() {
 	}
 	fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")
 	fmt.Println("--")
-	fmt.Println(`Migration rules are:
+	if !*apply {
+		fmt.Println(`Migration rules are:
 - Create milestone if not existing on target
 - Create label if not existing on target
 - Create issue if not existing on target (by title), either closed of opened on source
 - Creaate note (attached to issue) if not existing on target
 
-Use the --apply option parameter if that looks good to you to start the issues migration.
+Now use the -y flag if that looks good to you to start the issues migration.
 `)
+		os.Exit(0)
+	}
+	fmt.Println("Migrating ...")
 
 }
