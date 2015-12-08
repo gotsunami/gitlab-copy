@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/xanzy/go-gitlab"
@@ -79,13 +80,124 @@ func (m *migration) migrate() error {
 	}
 	fmt.Println("Migrating ...")
 
+	source := m.endpoint.from
+	target := m.endpoint.to
+
+	srcProjectID := *m.srcProject.ID
+	tarProjectID := *m.dstProject.ID
+
 	curPage := 1
 	opts := &gitlab.ListProjectIssuesOptions{ListOptions: gitlab.ListOptions{PerPage: resultsPerPage, Page: curPage}}
-	issues, _, err := m.endpoint.from.Issues.ListProjectIssues(m.srcProject.ID, opts)
+	issues, _, err := source.Issues.ListProjectIssues(srcProjectID, opts)
 	if err != nil {
 		return err
 	}
 	if len(issues) > 0 {
+		skipIssue := false
+		for _, issue := range issues {
+			tis, _, err := target.Issues.ListIssues(nil)
+			if err != nil {
+				log.Printf("target: can't fetch issues, skipping...")
+				continue
+			}
+			skipIssue = false
+			for _, t := range tis {
+				if issue.Title == t.Title {
+					// Target issue already exists, let's skip this one
+					skipIssue = true
+					log.Printf("target: issue '%s' already exists, skipping...", issue.Title)
+					break
+				}
+			}
+			if skipIssue {
+				continue
+			}
+			//MAT fmt.Printf("Assignee: %+v\n", issue.Assignee)
+			iopts := &gitlab.CreateIssueOptions{
+				Title:       issue.Title,
+				Description: issue.Description,
+			}
+			if issue.Assignee.Username != "" {
+				// Assigned, does target user exist?
+				// User may have a different ID on target
+				users, _, err := target.Users.ListUsers(nil)
+				if err == nil {
+					for _, u := range users {
+						if u.Username == issue.Assignee.Username {
+							iopts.AssigneeID = u.ID
+							break
+						}
+					}
+				} else {
+					log.Printf("target: error fetching users: %s", err.Error())
+				}
+			}
+			if issue.Milestone.Title != "" {
+				miles, _, err := target.Milestones.ListMilestones(tarProjectID, nil)
+				if err == nil {
+					found := false
+					for _, mi := range miles {
+						found = false
+						if mi.Title == issue.Milestone.Title {
+							found = true
+							iopts.MilestoneID = mi.ID
+							break
+						}
+					}
+					if !found {
+						// Create target milestone
+						cmopts := &gitlab.CreateMilestoneOptions{
+							Title:       issue.Milestone.Title,
+							Description: issue.Milestone.Description,
+							DueDate:     issue.Milestone.DueDate,
+						}
+						mi, _, err := target.Milestones.CreateMilestone(tarProjectID, cmopts)
+						if err == nil {
+							iopts.MilestoneID = mi.ID
+						} else {
+							log.Printf("target: error creating milestone '%s': %s", issue.Milestone.Title, err.Error())
+						}
+					}
+				}
+			}
+			if len(issue.Labels) > 0 {
+				lbls, _, err := target.Labels.ListLabels(tarProjectID)
+				targetLabels := make([]string, 0)
+				if err == nil {
+					found := false
+					for _, label := range issue.Labels {
+						found = false
+						for _, l := range lbls {
+							if l.Name == label {
+								found = true
+								break
+							}
+						}
+						if !found {
+							// Create target label
+							// FIXME: label color
+							clopts := &gitlab.CreateLabelOptions{Name: label, Color: "#329557"}
+							_, _, err := target.Labels.CreateLabel(tarProjectID, clopts)
+							if err == nil {
+								targetLabels = append(targetLabels, label)
+							} else {
+								log.Printf("target: error creating label '%s': %s", label, err.Error())
+							}
+						} else {
+							targetLabels = append(targetLabels, label)
+						}
+					}
+				} else {
+					log.Printf("target: error fetching labels: %s", err.Error())
+				}
+				iopts.Labels = targetLabels
+			}
+			// Create target issue if not existing (same name)
+			_, _, err = target.Issues.CreateIssue(tarProjectID, iopts)
+			if err != nil {
+				log.Printf("target: error creating issue: %s", err.Error())
+			}
+		}
 	}
 	return nil
 }
