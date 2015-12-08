@@ -95,7 +95,7 @@ func (m *migration) migrate() error {
 	if len(issues) > 0 {
 		skipIssue := false
 		for _, issue := range issues {
-			tis, _, err := target.Issues.ListIssues(nil)
+			tis, _, err := target.Issues.ListProjectIssues(tarProjectID, nil)
 			if err != nil {
 				log.Printf("target: can't fetch issues, skipping...")
 				continue
@@ -193,10 +193,17 @@ func (m *migration) migrate() error {
 				iopts.Labels = targetLabels
 			}
 			// Create target issue if not existing (same name)
-			_, _, err = target.Issues.CreateIssue(tarProjectID, iopts)
+			ni, _, err := target.Issues.CreateIssue(tarProjectID, iopts)
 			if err != nil {
 				log.Printf("target: error creating issue: %s", err.Error())
 			}
+			if issue.State == "closed" {
+				_, _, err := target.Issues.UpdateIssue(tarProjectID, ni.ID, &gitlab.UpdateIssueOptions{StateEvent: "close"})
+				if err != nil {
+					log.Printf("target: error closing issue #%d: %s", ni.IID, err.Error())
+				}
+			}
+			fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, ni.State)
 		}
 	}
 	return nil
