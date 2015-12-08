@@ -17,7 +17,9 @@ all: build
 build:
 	@gb build
 
-dist: cleardist buildall linux darwin freebsd windows
+dist: cleardist buildall zip
+
+zip: linux darwin freebsd windows
 
 linux:
 	@cp bin/${BIN} ${GCDIR}/${BIN} && \
