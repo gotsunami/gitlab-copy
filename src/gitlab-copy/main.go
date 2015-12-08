@@ -106,7 +106,7 @@ Options:
 	fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")
 	fmt.Println("--")
 	if !*apply {
-		fmt.Println(`Migration rules are:
+		fmt.Println(`Copy policies are:
 - Create milestone if not existing on target
 - Create label if not existing on target
 - Create issue if not existing on target (by title), either closed of opened on source

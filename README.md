@@ -3,6 +3,8 @@
 
 `gitlab-copy` is a simple tool for copying issues/labels/milestones/notes from one GitLab project to another, possibly running on different GitLab instances.
 
+`gitlab-copy` won't copy anything until told **explicitely** to do so. Running it from the command line will show some stats only.
+
 [Grab a binary version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your platform and write a YAML config file to specify source and target projects:
 
 ```
@@ -24,6 +26,10 @@ Options:
         
   -y    apply migration for real
 ```
+
+## Examples
+
+*TBW*
 
 ## Compile From Source
 
