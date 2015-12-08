@@ -23,13 +23,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, fmt.Sprintf("Usage: %s [options] configfile\n", os.Args[0]))
 		fmt.Fprintf(os.Stderr, `Where configfile holds YAML data like:
 from:
-    url: https://gitlab.outofpluto.com/api/v3
+    url: https://gitlab.mydomain.com
     token: atoken
-    project: namespace/myproject
+    project: namespace/project
 to:
-    url: https://gitlab.outofpluto.com/api/v3
+    url: https://gitlab.myotherdomain.com
     token: anothertoken
-    project: namespace/thisproject
+    project: namespace/project
 
 Options:
 `)
