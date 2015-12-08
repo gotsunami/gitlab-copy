@@ -18,8 +18,9 @@ type endpoint struct {
 }
 
 type migration struct {
-	params   *config
-	endpoint *endpoint
+	params                 *config
+	endpoint               *endpoint
+	srcProject, dstProject *gitlab.Project
 }
 
 func NewMigration(c *config) (*migration, error) {
@@ -34,7 +35,7 @@ func NewMigration(c *config) (*migration, error) {
 	if err := togl.SetBaseURL(c.To.ServerURL); err != nil {
 		return nil, err
 	}
-	m := &migration{c, &endpoint{fromgl, togl}}
+	m := &migration{params: c, endpoint: &endpoint{fromgl, togl}}
 	return m, nil
 }
 
@@ -54,9 +55,37 @@ func (m *migration) project(endpoint *gitlab.Client, name string) (*gitlab.Proje
 }
 
 func (m *migration) sourceProject(name string) (*gitlab.Project, error) {
-	return m.project(m.endpoint.from, name)
+	p, err := m.project(m.endpoint.from, name)
+	if err != nil {
+		return nil, err
+	}
+	m.srcProject = p
+	return p, nil
 }
 
 func (m *migration) destProject(name string) (*gitlab.Project, error) {
-	return m.project(m.endpoint.to, name)
+	p, err := m.project(m.endpoint.to, name)
+	if err != nil {
+		return nil, err
+	}
+	m.dstProject = p
+	return p, nil
+}
+
+// Performs the issues migration.
+func (m *migration) migrate() error {
+	if m.srcProject == nil || m.dstProject == nil {
+		return errors.New("nil project.")
+	}
+	fmt.Println("Migrating ...")
+
+	curPage := 1
+	opts := &gitlab.ListProjectIssuesOptions{ListOptions: gitlab.ListOptions{PerPage: resultsPerPage, Page: curPage}}
+	issues, _, err := m.endpoint.from.Issues.ListProjectIssues(m.srcProject.ID, opts)
+	if err != nil {
+		return err
+	}
+	if len(issues) > 0 {
+	}
+	return nil
 }

@@ -4,8 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/go-yaml"
+)
+
+const (
+	apiPath = "/api/v3"
 )
 
 type project struct {
@@ -24,6 +29,9 @@ func checkProjectData(p *project, prefix string) error {
 	}
 	if p.ServerURL == "" {
 		return fmt.Errorf("missing %s project's server URL", prefix)
+	}
+	if !strings.HasSuffix(p.ServerURL, apiPath) {
+		p.ServerURL += apiPath
 	}
 	if p.Name == "" {
 		return fmt.Errorf("missing %s project's name", prefix)

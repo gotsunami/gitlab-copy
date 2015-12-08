@@ -55,6 +55,10 @@ Options:
 		log.Fatal(err)
 	}
 
+	if !*apply {
+		fmt.Println("DUMMY MODE: won't apply anything (stats only)\n--")
+	}
+
 	m, err := NewMigration(c)
 	if err != nil {
 		log.Fatal(err)
@@ -112,6 +116,8 @@ Now use the -y flag if that looks good to you to start the issues migration.
 `)
 		os.Exit(0)
 	}
-	fmt.Println("Migrating ...")
 
+	if err := m.migrate(); err != nil {
+		log.Fatal(err)
+	}
 }
