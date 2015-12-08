@@ -203,7 +203,9 @@ func (m *migration) migrate() error {
 					log.Printf("target: error closing issue #%d: %s", ni.IID, err.Error())
 				}
 			}
-			fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, ni.State)
+			fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, issue.State)
+
+			// TODO: now copy related notes (comments)
 		}
 	}
 	return nil
