@@ -18,7 +18,6 @@ package gitlab
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -200,8 +199,6 @@ func (s *IssuesService) CreateIssue(
 	if err != nil {
 		return nil, nil, err
 	}
-
-	log.Printf("req: %#+v\n", req.URL)
 
 	i := new(Issue)
 	resp, err := s.client.Do(req, i)
