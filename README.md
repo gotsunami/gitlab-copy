@@ -43,4 +43,6 @@ Then build the project:
 $ gb build
 ```
 
-The program gets compiled into `bin/gitlab-copy`.
+or run `make`.
+
+The program gets compiled into `bin/gitlab-copy`. Cross-compile with `make buildall`.
