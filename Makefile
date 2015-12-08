@@ -9,6 +9,8 @@ GC_DARWIN_AMD64=${BIN}-darwin-amd64
 GC_FREEBSD_AMD64=${BIN}-freebsd-amd64
 GC_LINUX_AMD64=${BIN}-linux-amd64
 GC_WINDOWS_AMD64=${BIN}-windows-amd64
+#
+GB_BUILD64=GOARCH=amd64 gb build
 
 all: build
 
@@ -34,10 +36,10 @@ freebsd:
 		(cd ${TMPDIR} && zip -r ${TMPDIR}/${GC_FREEBSD_AMD64}.zip ${BIN})
 
 buildall:
-	@GOOS=darwin GOARCH=amd64 gb build
-	@GOOS=freebsd GOARCH=amd64 gb build
-	@GOOS=linux GOARCH=amd64 gb build
-	@GOOS=windows GOARCH=amd64 gb build
+	@GOOS=darwin ${GB_BUILD64}
+	@GOOS=freebsd ${GB_BUILD64}
+	@GOOS=linux ${GB_BUILD64}
+	@GOOS=windows ${GB_BUILD64}
 
 cleardist:
 	@rm -rf /tmp/dist && mkdir -p ${GCDIR}
