@@ -17,6 +17,9 @@ all: build
 build:
 	@gb build
 
+test:
+	@gb test
+
 dist: cleardist buildall zip
 
 zip: linux darwin freebsd windows
