@@ -5,10 +5,12 @@ BIN=gitlab-copy
 DISTDIR=dist
 GCDIR=${DISTDIR}/${BIN}
 #
-GC_DARWIN_AMD64=${BIN}-darwin-amd64
-GC_FREEBSD_AMD64=${BIN}-freebsd-amd64
-GC_LINUX_AMD64=${BIN}-linux-amd64
-GC_WINDOWS_AMD64=${BIN}-windows-amd64
+VERSION=`git describe --always`
+GC_VERSION=${BIN}-${VERSION}
+GC_DARWIN_AMD64=${GC_VERSION}-darwin-amd64
+GC_FREEBSD_AMD64=${GC_VERSION}-freebsd-amd64
+GC_LINUX_AMD64=${GC_VERSION}-linux-amd64
+GC_WINDOWS_AMD64=${GC_VERSION}-windows-amd64
 #
 GB_BUILD64=GOARCH=amd64 gb build
 
@@ -33,15 +35,15 @@ linux:
 		(cd ${DISTDIR} && zip -r ${GC_LINUX_AMD64}.zip ${BIN})
 
 darwin:
-	@cp bin/${GC_DARWIN_AMD64} ${GCDIR}/${BIN} && \
+	@cp bin/${BIN}-darwin* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_DARWIN_AMD64}.zip ${BIN})
 
 windows:
-	@cp bin/${GC_WINDOWS_AMD64}.exe ${GCDIR}/${BIN} && \
+	@cp bin/${BIN}-windows* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_WINDOWS_AMD64}.zip ${BIN})
 
 freebsd:
-	@cp bin/${GC_FREEBSD_AMD64} ${GCDIR}/${BIN} && \
+	@cp bin/${BIN}-freebsd* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_FREEBSD_AMD64}.zip ${BIN})
 
 buildall: version
