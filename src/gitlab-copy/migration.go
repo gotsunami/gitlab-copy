@@ -112,7 +112,6 @@ func (m *migration) migrate() error {
 			if skipIssue {
 				continue
 			}
-			//MAT fmt.Printf("Assignee: %+v\n", issue.Assignee)
 			iopts := &gitlab.CreateIssueOptions{
 				Title:       issue.Title,
 				Description: issue.Description,
@@ -205,7 +204,35 @@ func (m *migration) migrate() error {
 			}
 			fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, issue.State)
 
-			// TODO: now copy related notes (comments)
+			// Copy related notes (comments)
+			notes, _, err := source.Notes.ListIssueNotes(srcProjectID, issue.ID, nil)
+			if err != nil {
+				log.Printf("source: can't get issue #%d notes: %s", issue.ID, err.Error())
+			}
+			opts := &gitlab.CreateIssueNoteOptions{}
+			ns, _, err := target.Notes.ListIssueNotes(tarProjectID, ni.ID, nil)
+			if err != nil {
+				log.Printf("target: can't get issue #%d notes: %s", ni.ID, err.Error())
+			}
+			for _, n := range notes {
+				if len(ns) > 0 {
+					for _, m := range ns {
+						if m.Body != n.Body {
+							opts.Body = m.Body
+							_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
+							if err != nil {
+								log.Printf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
+							}
+						}
+					}
+				} else {
+					opts.Body = n.Body
+					_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
+					if err != nil {
+						log.Printf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
+					}
+				}
+			}
 		}
 	}
 	return nil

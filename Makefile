@@ -53,5 +53,5 @@ cleardist:
 	@rm -rf /tmp/dist && mkdir -p ${GCDIR}
 
 clean:
-	@rm -f bin/*
+	@rm -rf bin pkg
 	@rm -rf ${TMPDIR}
