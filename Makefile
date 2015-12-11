@@ -1,5 +1,5 @@
 
-.PHONY: build dist linux darwin windows buildall cleardist clean
+.PHONY: build dist linux darwin windows buildall version cleardist clean
 
 BIN=gitlab-copy
 TMPDIR=/tmp/dist
@@ -14,7 +14,7 @@ GB_BUILD64=GOARCH=amd64 gb build
 
 all: build
 
-build:
+build: version
 	@gb build
 
 test:
@@ -43,11 +43,14 @@ freebsd:
 	@cp bin/${GC_FREEBSD_AMD64} ${GCDIR}/${BIN} && \
 		(cd ${TMPDIR} && zip -r ${TMPDIR}/${GC_FREEBSD_AMD64}.zip ${BIN})
 
-buildall:
+buildall: version
 	@GOOS=darwin ${GB_BUILD64}
 	@GOOS=freebsd ${GB_BUILD64}
 	@GOOS=linux ${GB_BUILD64}
 	@GOOS=windows ${GB_BUILD64}
+
+version:
+	@./tools/version.sh
 
 cleardist:
 	@rm -rf /tmp/dist && mkdir -p ${GCDIR}

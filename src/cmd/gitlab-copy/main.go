@@ -42,7 +42,7 @@ Options:
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("version: %s\n", "too")
+		fmt.Printf("version: %s\n", appVersion)
 		os.Exit(0)
 	}
 

@@ -3,3 +3,4 @@ pkg
 *.swp
 tags
 .cover
+src/cmd/gitlab-copy/version.go
