@@ -38,11 +38,6 @@ Install `gb` to compile the project:
 $ go get github.com/constabulary/gb/...
 ```
 
-Then build the project:
-```
-$ gb build
-```
-
-or run `make`.
-
-The program gets compiled into `bin/gitlab-copy`. Cross-compile with `make buildall`.
+- To build the project, just run `make`. The program gets compiled into `bin/gitlab-copy`
+- Cross-compile with `make buildall`
+- Prepare distribution packages with `make dist`
