@@ -2,3 +2,4 @@ bin
 pkg
 *.swp
 tags
+.cover

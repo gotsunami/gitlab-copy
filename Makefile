@@ -20,6 +20,9 @@ build:
 test:
 	@gb test
 
+coverage:
+	@./tools/coverage.sh `pwd`
+
 dist: cleardist buildall zip
 
 zip: linux darwin freebsd windows
