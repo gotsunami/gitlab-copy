@@ -4,3 +4,4 @@ pkg
 tags
 .cover
 src/cmd/gitlab-copy/version.go
+dist
