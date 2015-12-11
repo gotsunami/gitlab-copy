@@ -5,7 +5,7 @@ BIN=gitlab-copy
 DISTDIR=dist
 GCDIR=${DISTDIR}/${BIN}
 #
-VERSION=`git describe --always`
+VERSION=`git describe --tags --always`
 GC_VERSION=${BIN}-${VERSION}
 GC_DARWIN_AMD64=${GC_VERSION}-darwin-amd64
 GC_FREEBSD_AMD64=${GC_VERSION}-freebsd-amd64
