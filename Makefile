@@ -19,7 +19,7 @@ all: build
 build: version
 	@gb build
 
-test:
+test: version
 	@gb test
 
 coverage:
