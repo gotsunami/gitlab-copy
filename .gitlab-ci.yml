@@ -1,0 +1,12 @@
+image: golang:latest
+
+before_script:
+    - go get github.com/constabulary/gb/...
+
+build:
+    script:
+        - make
+
+test:
+    script:
+        - make test
