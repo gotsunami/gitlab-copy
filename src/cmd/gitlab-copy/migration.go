@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/xanzy/go-gitlab"
 )
@@ -218,7 +219,7 @@ func (m *migration) migrate() error {
 				if len(ns) > 0 {
 					for _, m := range ns {
 						if m.Body != n.Body {
-							opts.Body = m.Body
+							opts.Body = fmt.Sprintf("%s @%s wrote on %s :\n\n%s", m.Author.Name, m.Author.Username, m.CreatedAt.Format(time.RFC1123), m.Body)
 							_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
 							if err != nil {
 								log.Printf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
@@ -226,7 +227,7 @@ func (m *migration) migrate() error {
 						}
 					}
 				} else {
-					opts.Body = n.Body
+					opts.Body = fmt.Sprintf("%s @%s wrote on %s :\n\n%s", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123), n.Body)
 					_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
 					if err != nil {
 						log.Printf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
