@@ -14,7 +14,7 @@ const (
 EOF
 }
 
-for d in src/cmd/*; do
+for d in src/command/*; do
     VERSION="$d/version.go"
     if [ -f $VERSION ]; then
         grep "\<$DESC\>" $VERSION >/dev/null || writeVersion $VERSION
