@@ -3,5 +3,5 @@ pkg
 *.swp
 tags
 .cover
-src/cmd/gitlab-copy/version.go
+src/command/gitlab-copy/version.go
 dist
