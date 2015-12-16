@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func map2human(m map[string]int) string {
+func map2Human(m map[string]int) string {
 	keys := make([]string, len(m))
 	i := 0
 	for k := range m {
@@ -26,6 +26,9 @@ from:
     url: https://gitlab.mydomain.com
     token: atoken
     project: namespace/project
+	issues:
+		- 5
+		- 8-10
 to:
     url: https://gitlab.myotherdomain.com
     token: anothertoken
@@ -93,10 +96,10 @@ Options:
 	fmt.Println("OK")
 	fmt.Printf("source: %v\n", pstats)
 	if len(pstats.milestones) > 0 {
-		fmt.Printf("source: %d milestone(s): %s\n", len(pstats.milestones), map2human(pstats.milestones))
+		fmt.Printf("source: %d milestone(s): %s\n", len(pstats.milestones), map2Human(pstats.milestones))
 	}
 	if len(pstats.labels) > 0 {
-		fmt.Printf("source: %d label(s): %s\n", len(pstats.labels), map2human(pstats.labels))
+		fmt.Printf("source: %d label(s): %s\n", len(pstats.labels), map2Human(pstats.labels))
 	}
 
 	fmt.Printf("source: counting notes (comments), can take a while ... ")

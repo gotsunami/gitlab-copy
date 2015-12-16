@@ -25,6 +25,9 @@ test: version
 coverage:
 	@./tools/coverage.sh `pwd`
 
+htmlcoverage:
+	@./tools/coverage.sh --html `pwd`
+
 dist: cleardist buildall zip
 
 zip: linux darwin freebsd windows
