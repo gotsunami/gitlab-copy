@@ -5,13 +5,23 @@
 
 `gitlab-copy` won't copy anything until told **explicitely** to do so. Running it from the command line will show some stats only.
 
-[Grab a binary version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your platform and write a YAML config file to specify source and target projects:
+[Grab a binary version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your platform or have a look to the **Compile From Source** section.
 
+## Features
+
+This is **beta** software at the moment. The following features are available:
+
+- Creates milestones if not existing on target
+- Creates labels if not existing on target
+- Creates issues if not existing on target (by title)
+- Apply closed status on issues, if any
+- Creates notes (attached to issues)
+- Can specify a specific issue or range of issues to copy in the YAML config file
+
+## Usage
+
+First, write a YAML config file to specify source and target projects, along with your GitLab account tokens:
 ```
-$ ./gitlab-copy -h
-Usage: ./bin/gitlab-copy [options] configfile
-
-Where configfile holds YAML data like:
 from:
     url: https://gitlab.mydomain.com
     token: atoken
@@ -20,16 +30,31 @@ to:
     url: https://gitlab.myotherdomain.com
     token: anothertoken
     project: namespace/project
-
-Options:
-  -version
-        
-  -y    apply migration for real
 ```
 
-## Examples
+Note that a specific issue or ranges of issues can be specified in the YAML config file. If you want to
+copie only issue #15 and issues #20 to #30, add an `issues` entry in the `from:` entry:
+```
+from:
+    url: https://gitlab.mydomain.com
+    token: atoken
+    project: namespace/project
+    issues:
+        - 15
+        - 20-30
+...
+```
 
-*TBW*
+Now grab some project stats by running
+```
+$ ./gitlab-copy g.conf
+```
+
+If everything looks good, run the same command, this time with the `-y` flag to effectively copie issues between GitLab
+instances (they can be the same):
+```
+$ ./gitlab-copy -y g.conf
+```
 
 ## Compile From Source
 
@@ -41,3 +66,7 @@ $ go get github.com/constabulary/gb/...
 - To build the project, just run `make`. The program gets compiled into `bin/gitlab-copy`
 - Cross-compile with `make buildall`
 - Prepare distribution packages with `make dist`
+
+## License
+
+MIT. See `LICENSE` file.

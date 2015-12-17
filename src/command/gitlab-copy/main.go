@@ -26,9 +26,9 @@ from:
     url: https://gitlab.mydomain.com
     token: atoken
     project: namespace/project
-	issues:
-		- 5
-		- 8-10
+    issues:
+      - 5
+      - 8-10
 to:
     url: https://gitlab.myotherdomain.com
     token: anothertoken
@@ -110,10 +110,11 @@ Options:
 	fmt.Println("--")
 	if !*apply {
 		fmt.Println(`Copy policies are:
-- Create milestone if not existing on target
-- Create label if not existing on target
-- Create issue if not existing on target (by title), either closed of opened on source
-- Creaate note (attached to issue) if not existing on target
+- Creates milestones if not existing on target
+- Creates labels if not existing on target
+- Creates all issues (or those specified) if not existing on target (by title)
+- Apply closed status on issues, if any
+- Creates notes (attached to issues)
 
 Now use the -y flag if that looks good to you to start the issues migration.
 `)
