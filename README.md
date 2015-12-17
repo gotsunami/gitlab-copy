@@ -20,7 +20,7 @@ This is **beta** software at the moment. The following features are available:
 
 ## Usage
 
-First, write a YAML config file to specify source and target projects, along with your GitLab account tokens:
+First, write a `gitlab.yml` YAML config file to specify source and target projects, along with your GitLab account tokens:
 ```
 from:
     url: https://gitlab.mydomain.com
@@ -47,13 +47,13 @@ from:
 
 Now grab some project stats by running
 ```
-$ ./gitlab-copy g.conf
+$ ./gitlab-copy gitlab.yml
 ```
 
 If everything looks good, run the same command, this time with the `-y` flag to effectively copie issues between GitLab
 instances (they can be the same):
 ```
-$ ./gitlab-copy -y g.conf
+$ ./gitlab-copy -y gitlab.yml
 ```
 
 ## Compile From Source
