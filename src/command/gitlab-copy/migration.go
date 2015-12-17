@@ -192,28 +192,11 @@ func (m *migration) migrateIssue(issueID int) error {
 		return fmt.Errorf("source: can't get issue #%d notes: %s", issue.ID, err.Error())
 	}
 	opts := &gitlab.CreateIssueNoteOptions{}
-	ns, _, err := target.Notes.ListIssueNotes(tarProjectID, ni.ID, nil)
-	if err != nil {
-		return fmt.Errorf("target: can't get issue #%d notes: %s", ni.ID, err.Error())
-	}
 	for _, n := range notes {
-		if len(ns) > 0 {
-			for _, m := range ns {
-				part := fmt.Sprintf("%s @%s wrote on %s :\n\n%s", m.Author.Name, m.Author.Username, m.CreatedAt.Format(time.RFC1123), n.Body)
-				if m.Body != part {
-					opts.Body = fmt.Sprintf("%s @%s wrote on %s :\n\n%s", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123), n.Body)
-					_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
-					if err != nil {
-						return fmt.Errorf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
-					}
-				}
-			}
-		} else {
-			opts.Body = fmt.Sprintf("%s @%s wrote on %s :\n\n%s", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123), n.Body)
-			_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
-			if err != nil {
-				return fmt.Errorf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
-			}
+		opts.Body = fmt.Sprintf("%s @%s wrote on %s :\n\n%s", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123), n.Body)
+		_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
+		if err != nil {
+			return fmt.Errorf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
 		}
 	}
 
@@ -240,11 +223,16 @@ func (m *migration) migrate() error {
 
 	curPage := 1
 	opts := &gitlab.ListProjectIssuesOptions{ListOptions: gitlab.ListOptions{PerPage: resultsPerPage, Page: curPage}}
-	issues, _, err := source.Issues.ListProjectIssues(srcProjectID, opts)
-	if err != nil {
-		return err
-	}
-	if len(issues) > 0 {
+
+	for {
+		issues, _, err := source.Issues.ListProjectIssues(srcProjectID, opts)
+		if err != nil {
+			return err
+		}
+		if len(issues) == 0 {
+			break
+		}
+
 		for _, issue := range issues {
 			if m.params.From.matches(issue.IID) {
 				if err := m.migrateIssue(issue.ID); err != nil {
@@ -252,6 +240,8 @@ func (m *migration) migrate() error {
 				}
 			}
 		}
+		curPage++
+		opts.Page = curPage
 	}
 	return nil
 }
