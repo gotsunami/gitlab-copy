@@ -33,7 +33,7 @@ to:
 ```
 
 Note that a specific issue or ranges of issues can be specified in the YAML config file. If you want to
-copie only issue #15 and issues #20 to #30, add an `issues` entry in the `from:` entry:
+copy only issue #15 and issues #20 to #30, add an `issues` key in the `from:` key:
 ```
 from:
     url: https://gitlab.mydomain.com
