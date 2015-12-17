@@ -9,7 +9,7 @@
 
 ## Features
 
-This is **beta** software at the moment. The following features are available:
+Please note this is **beta** software. The following features are available:
 
 - Creates milestones if not existing on target
 - Creates labels if not existing on target
