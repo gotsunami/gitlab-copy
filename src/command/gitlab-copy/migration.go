@@ -185,13 +185,6 @@ func (m *migration) migrateIssue(issueID int) error {
 	if err != nil {
 		return fmt.Errorf("target: error creating issue: %s", err.Error())
 	}
-	if issue.State == "closed" {
-		_, _, err := target.Issues.UpdateIssue(tarProjectID, ni.ID, &gitlab.UpdateIssueOptions{StateEvent: "close"})
-		if err != nil {
-			return fmt.Errorf("target: error closing issue #%d: %s", ni.IID, err.Error())
-		}
-	}
-	fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, issue.State)
 
 	// Copy related notes (comments)
 	notes, _, err := source.Notes.ListIssueNotes(srcProjectID, issue.ID, nil)
@@ -208,7 +201,7 @@ func (m *migration) migrateIssue(issueID int) error {
 			for _, m := range ns {
 				part := fmt.Sprintf("%s @%s wrote on %s :\n\n%s", m.Author.Name, m.Author.Username, m.CreatedAt.Format(time.RFC1123), n.Body)
 				if m.Body != part {
-					opts.Body = part
+					opts.Body = fmt.Sprintf("%s @%s wrote on %s :\n\n%s", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123), n.Body)
 					_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
 					if err != nil {
 						return fmt.Errorf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
@@ -223,6 +216,15 @@ func (m *migration) migrateIssue(issueID int) error {
 			}
 		}
 	}
+
+	if issue.State == "closed" {
+		_, _, err := target.Issues.UpdateIssue(tarProjectID, ni.ID, &gitlab.UpdateIssueOptions{StateEvent: "close"})
+		if err != nil {
+			return fmt.Errorf("target: error closing issue #%d: %s", ni.IID, err.Error())
+		}
+	}
+	fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, issue.State)
+
 	return nil
 }
 
