@@ -206,7 +206,7 @@ func (m *migration) migrateIssue(issueID int) error {
 	for _, n := range notes {
 		if len(ns) > 0 {
 			for _, m := range ns {
-				part := fmt.Sprintf("%s @%s wrote on %s :\n\n%s", m.Author.Name, m.Author.Username, m.CreatedAt.Format(time.RFC1123), m.Body)
+				part := fmt.Sprintf("%s @%s wrote on %s :\n\n%s", m.Author.Name, m.Author.Username, m.CreatedAt.Format(time.RFC1123), n.Body)
 				if m.Body != part {
 					opts.Body = part
 					_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
