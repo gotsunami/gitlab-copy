@@ -16,7 +16,7 @@ Please note this is **beta** software. The following features are available:
 - Creates issues if not existing on target (by title)
 - Apply closed status on issues, if any
 - Creates notes (attached to issues)
-- Can specify a specific issue or range of issues to copy in the YAML config file
+- Can specify in the config file a specific issue or range of issues to copy
 
 ## Usage
 
