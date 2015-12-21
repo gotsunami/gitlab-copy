@@ -114,6 +114,7 @@ Options:
 - Creates labels if not existing on target
 - Creates all issues (or those specified) if not existing on target (by title)
 - Apply closed status on issues, if any
+- Set issue's assignee (if user exists) and milestone, if any
 - Creates notes (attached to issues)
 
 Now use the -y flag if that looks good to you to start the issues migration.
