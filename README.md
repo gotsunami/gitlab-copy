@@ -15,6 +15,7 @@ Please note this is **beta** software. The following features are available:
 - Creates labels if not existing on target
 - Creates issues if not existing on target (by title)
 - Apply closed status on issues, if any
+- Set issue's assignee (if user exists) and milestone, if any
 - Creates notes (attached to issues)
 - Can specify in the config file a specific issue or range of issues to copy
 
@@ -58,7 +59,7 @@ $ ./gitlab-copy -y gitlab.yml
 
 ## Compile From Source
 
-Install `gb` to compile the project:
+Ensure you have a working [Go](www.golang.org) 1.5+ installation then install `gb` to compile the project:
 ```
 $ go get github.com/constabulary/gb/...
 ```
