@@ -1,6 +1,8 @@
 
 # GitLab Copy
 
+[![Build Status](https://travis-ci.org/gotsunami/gitlab-copy.svg?branch=master)](https://travis-ci.org/gotsunami/gitlab-copy)
+
 `gitlab-copy` is a simple tool for copying issues/labels/milestones/notes from one GitLab project to another, possibly running on different GitLab instances.
 
 `gitlab-copy` won't copy anything until told **explicitely** to do so. Running it from the command line will show some stats only.
