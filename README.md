@@ -7,7 +7,9 @@
 
 `gitlab-copy` won't copy anything until told **explicitely** to do so. Running it from the command line will show some stats only.
 
-[Grab a binary version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your platform or have a look to the **Compile From Source** section.
+## Download
+
+Installing `gitlab-copy` is very easy since it comes as a static binary with no dependencies. Just [Grab a compiled version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your platform (or have a look to the **Compile From Source** section).
 
 ## Features
 
