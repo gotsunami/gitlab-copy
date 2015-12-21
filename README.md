@@ -59,7 +59,7 @@ $ ./gitlab-copy -y gitlab.yml
 
 ## Compile From Source
 
-Ensure you have a working [Go](www.golang.org) 1.5+ installation then install `gb` to compile the project:
+Ensure you have a working [Go](https://www.golang.org) 1.5+ installation then install `gb` to compile the project:
 ```
 $ go get github.com/constabulary/gb/...
 ```
