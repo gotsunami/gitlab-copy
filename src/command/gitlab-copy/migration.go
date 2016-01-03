@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/xanzy/go-gitlab"
@@ -211,6 +212,16 @@ func (m *migration) migrateIssue(issueID int) error {
 	return nil
 }
 
+type issueId struct {
+	IID, ID int
+}
+
+type byIID []issueId
+
+func (a byIID) Len() int           { return len(a) }
+func (a byIID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byIID) Less(i, j int) bool { return a[i].IID < a[j].IID }
+
 // Performs the issues migration.
 func (m *migration) migrate() error {
 	if m.srcProject == nil || m.dstProject == nil {
@@ -222,8 +233,11 @@ func (m *migration) migrate() error {
 	srcProjectID := *m.srcProject.ID
 
 	curPage := 1
-	opts := &gitlab.ListProjectIssuesOptions{ListOptions: gitlab.ListOptions{PerPage: resultsPerPage, Page: curPage}}
+	opts := &gitlab.ListProjectIssuesOptions{Sort: "asc", ListOptions: gitlab.ListOptions{PerPage: resultsPerPage, Page: curPage}}
 
+	s := make([]issueId, 0)
+
+	// First, count issues
 	for {
 		issues, _, err := source.Issues.ListProjectIssues(srcProjectID, opts)
 		if err != nil {
@@ -234,14 +248,22 @@ func (m *migration) migrate() error {
 		}
 
 		for _, issue := range issues {
-			if m.params.From.matches(issue.IID) {
-				if err := m.migrateIssue(issue.ID); err != nil {
-					log.Printf(err.Error())
-				}
-			}
+			s = append(s, issueId{IID: issue.IID, ID: issue.ID})
 		}
 		curPage++
 		opts.Page = curPage
 	}
+
+	// Then sort
+	sort.Sort(byIID(s))
+
+	for _, issue := range s {
+		if m.params.From.matches(issue.IID) {
+			if err := m.migrateIssue(issue.ID); err != nil {
+				log.Printf(err.Error())
+			}
+		}
+	}
+
 	return nil
 }
