@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
+	"path"
 	"strconv"
 	"strings"
 
@@ -88,8 +90,13 @@ func checkProjectData(p *project, prefix string) error {
 	if p.ServerURL == "" {
 		return fmt.Errorf("missing %s project's server URL", prefix)
 	}
+	u, err := url.Parse(p.ServerURL)
+	if err != nil {
+		return err
+	}
 	if !strings.HasSuffix(p.ServerURL, apiPath) {
-		p.ServerURL += apiPath
+		p.ServerURL = path.Join(u.Host, u.Path, apiPath)
+		p.ServerURL = fmt.Sprintf("%s://%s", u.Scheme, p.ServerURL)
 	}
 	if p.Name == "" {
 		return fmt.Errorf("missing %s project's name", prefix)
