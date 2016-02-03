@@ -43,13 +43,13 @@ func NewMigration(c *config) (*migration, error) {
 }
 
 // Returns project by name.
-func (m *migration) project(endpoint *gitlab.Client, name string) (*gitlab.Project, error) {
+func (m *migration) project(endpoint *gitlab.Client, name, which string) (*gitlab.Project, error) {
 	proj, resp, err := endpoint.Projects.GetProject(name)
 	if resp == nil {
 		return nil, errors.New("network error: " + err.Error())
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("source project '%s' not found", name)
+		return nil, fmt.Errorf("%s project '%s' not found", which, name)
 	}
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (m *migration) project(endpoint *gitlab.Client, name string) (*gitlab.Proje
 }
 
 func (m *migration) sourceProject(name string) (*gitlab.Project, error) {
-	p, err := m.project(m.endpoint.from, name)
+	p, err := m.project(m.endpoint.from, name, "source")
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (m *migration) sourceProject(name string) (*gitlab.Project, error) {
 }
 
 func (m *migration) destProject(name string) (*gitlab.Project, error) {
-	p, err := m.project(m.endpoint.to, name)
+	p, err := m.project(m.endpoint.to, name, "target")
 	if err != nil {
 		return nil, err
 	}
