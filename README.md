@@ -26,27 +26,29 @@ Please note this is **beta** software. The following features are available:
 ## Usage
 
 First, write a `gitlab.yml` YAML config file to specify source and target projects, along with your GitLab account tokens:
-```
+
+```yaml
 from:
-    url: https://gitlab.mydomain.com
-    token: atoken
-    project: namespace/project
+  url: https://gitlab.mydomain.com
+  token: atoken
+  project: namespace/project
 to:
-    url: https://gitlab.myotherdomain.com
-    token: anothertoken
-    project: namespace/project
+  url: https://gitlab.myotherdomain.com
+  token: anothertoken
+  project: namespace/project
 ```
 
 Note that a specific issue or ranges of issues can be specified in the YAML config file. If you want to
 copy only issue #15 and issues #20 to #30, add an `issues` key in the `from:` key:
-```
+
+```yaml
 from:
-    url: https://gitlab.mydomain.com
-    token: atoken
-    project: namespace/project
-    issues:
-        - 15
-        - 20-30
+  url: https://gitlab.mydomain.com
+  token: atoken
+  project: namespace/project
+  issues:
+  - 15
+  - 20-30
 ...
 ```
 
