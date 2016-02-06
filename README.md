@@ -25,7 +25,10 @@ Please note this is **beta** software. The following features are available:
 
 ## Usage
 
-First, write a `gitlab.yml` YAML config file to specify source and target projects, along with your GitLab account tokens:
+First, make sure you have valid GitLab account tokens for both source and destination GitLab installations. They are used
+to access GitLab resources without authentication. GitLab private tokens are availble in "*Profile Settings* -> *Account*".
+
+Now, write a `gitlab.yml` YAML config file to specify source and target projects, along with your GitLab account tokens:
 
 ```yaml
 from:
