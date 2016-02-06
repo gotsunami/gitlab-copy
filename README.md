@@ -15,12 +15,12 @@ Installing `gitlab-copy` is very easy since it comes as a static binary with no 
 
 Please note this is **beta** software. The following features are available:
 
-- Creates milestones if not existing on target
-- Creates labels if not existing on target
-- Creates issues if not existing on target (by title)
+- Copy milestones if not existing on target
+- Copy all source labels on target
+- Copy issues if not existing on target (by title)
 - Apply closed status on issues, if any
 - Set issue's assignee (if user exists) and milestone, if any
-- Creates notes (attached to issues)
+- Copy notes (attached to issues)
 - Can specify in the config file a specific issue or range of issues to copy
 
 ## Usage

@@ -70,11 +70,6 @@ func (p *projectStats) computeStats(client *gitlab.Client) error {
 				if issue.Milestone.Title != "" {
 					p.milestones[issue.Milestone.Title]++
 				}
-				if len(issue.Labels) > 0 {
-					for _, label := range issue.Labels {
-						p.labels[label]++
-					}
-				}
 			}
 		} else {
 			// Exit
@@ -85,6 +80,14 @@ func (p *projectStats) computeStats(client *gitlab.Client) error {
 
 	if err := p.pagination(client, action); err != nil {
 		return err
+	}
+
+	labels, _, err := client.Labels.ListLabels(*p.project.ID)
+	if err != nil {
+		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
+	}
+	for _, label := range labels {
+		p.labels[label.Name]++
 	}
 	return nil
 }

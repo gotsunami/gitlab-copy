@@ -110,12 +110,12 @@ Options:
 	fmt.Println("--")
 	if !*apply {
 		fmt.Println(`Copy policies are:
-- Creates milestones if not existing on target
-- Creates labels if not existing on target
-- Creates all issues (or those specified) if not existing on target (by title)
-- Apply closed status on issues, if any
+- Copy milestones if not existing on target
+- Copy all source labels on target
+- Copy all issues (or those specified) if not existing on target (by title)
+- Copy closed status on issues, if any
 - Set issue's assignee (if user exists) and milestone, if any
-- Creates notes (attached to issues)
+- Copy notes (attached to issues)
 
 Now use the -y flag if that looks good to you to start the issues migration.
 `)

@@ -82,16 +82,6 @@ func (m *migration) migrateIssue(issueID int) error {
 	srcProjectID := *m.srcProject.ID
 	tarProjectID := *m.dstProject.ID
 
-	// Fetch all source labels
-	srcLabels := make(map[string]string, 0)
-	labels, _, err := source.Labels.ListLabels(srcProjectID)
-	if err != nil {
-		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
-	}
-	for _, label := range labels {
-		srcLabels[label.Name] = label.Color
-	}
-
 	issue, _, err := source.Issues.GetIssue(srcProjectID, issueID)
 	if err != nil {
 		return fmt.Errorf("target: can't fetch issue: %s", err.Error())
@@ -115,6 +105,7 @@ func (m *migration) migrateIssue(issueID int) error {
 	iopts := &gitlab.CreateIssueOptions{
 		Title:       issue.Title,
 		Description: issue.Description,
+		Labels:      make([]string, 0),
 	}
 	if issue.Assignee.Username != "" {
 		// Assigned, does target user exist?
@@ -159,36 +150,8 @@ func (m *migration) migrateIssue(issueID int) error {
 			}
 		}
 	}
-	if len(issue.Labels) > 0 {
-		lbls, _, err := target.Labels.ListLabels(tarProjectID)
-		targetLabels := make([]string, 0)
-		if err == nil {
-			found := false
-			for _, label := range issue.Labels {
-				found = false
-				for _, l := range lbls {
-					if l.Name == label {
-						found = true
-						break
-					}
-				}
-				if !found {
-					// Create target label
-					clopts := &gitlab.CreateLabelOptions{Name: label, Color: srcLabels[label]}
-					_, _, err := target.Labels.CreateLabel(tarProjectID, clopts)
-					if err == nil {
-						targetLabels = append(targetLabels, label)
-					} else {
-						return fmt.Errorf("target: error creating label '%s': %s", label, err.Error())
-					}
-				} else {
-					targetLabels = append(targetLabels, label)
-				}
-			}
-		} else {
-			return fmt.Errorf("target: error fetching labels: %s", err.Error())
-		}
-		iopts.Labels = targetLabels
+	for _, label := range issue.Labels {
+		iopts.Labels = append(iopts.Labels, label)
 	}
 	// Create target issue if not existing (same name)
 	ni, _, err := target.Issues.CreateIssue(tarProjectID, iopts)
@@ -236,15 +199,36 @@ func (m *migration) migrate() error {
 	if m.srcProject == nil || m.dstProject == nil {
 		return errors.New("nil project.")
 	}
-	fmt.Println("Copying issues ...")
+	fmt.Println("Copying labels ...")
 
 	source := m.endpoint.from
+	target := m.endpoint.to
+
 	srcProjectID := *m.srcProject.ID
+	tarProjectID := *m.dstProject.ID
 
 	curPage := 1
 	opts := &gitlab.ListProjectIssuesOptions{Sort: "asc", ListOptions: gitlab.ListOptions{PerPage: resultsPerPage, Page: curPage}}
 
 	s := make([]issueId, 0)
+
+	// Copy all source labels on target
+	labels, _, err := source.Labels.ListLabels(srcProjectID)
+	if err != nil {
+		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
+	}
+	for _, label := range labels {
+		clopts := &gitlab.CreateLabelOptions{Name: label.Name, Color: label.Color}
+		_, resp, err := target.Labels.CreateLabel(tarProjectID, clopts)
+		if err != nil {
+			// GitLab returns a 409 code if label already exists
+			if resp.StatusCode != http.StatusConflict {
+				return fmt.Errorf("target: error creating label '%s': %s", label, err.Error())
+			}
+		}
+	}
+
+	fmt.Println("Copying issues ...")
 
 	// First, count issues
 	for {
