@@ -13,7 +13,7 @@ Installing `gitlab-copy` is very easy since it comes as a static binary with no 
 
 ## Features
 
-Please note this is **beta** software. The following features are available:
+The following features are available:
 
 - Copy milestones if not existing on target
 - Copy all source labels on target
