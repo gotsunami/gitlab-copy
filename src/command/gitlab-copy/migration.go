@@ -82,6 +82,16 @@ func (m *migration) migrateIssue(issueID int) error {
 	srcProjectID := *m.srcProject.ID
 	tarProjectID := *m.dstProject.ID
 
+	// Fetch all source labels
+	srcLabels := make(map[string]string, 0)
+	labels, _, err := source.Labels.ListLabels(srcProjectID)
+	if err != nil {
+		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
+	}
+	for _, label := range labels {
+		srcLabels[label.Name] = label.Color
+	}
+
 	issue, _, err := source.Issues.GetIssue(srcProjectID, issueID)
 	if err != nil {
 		return fmt.Errorf("target: can't fetch issue: %s", err.Error())
@@ -164,8 +174,7 @@ func (m *migration) migrateIssue(issueID int) error {
 				}
 				if !found {
 					// Create target label
-					// FIXME: label color
-					clopts := &gitlab.CreateLabelOptions{Name: label, Color: "#329557"}
+					clopts := &gitlab.CreateLabelOptions{Name: label, Color: srcLabels[label]}
 					_, _, err := target.Labels.CreateLabel(tarProjectID, clopts)
 					if err == nil {
 						targetLabels = append(targetLabels, label)
