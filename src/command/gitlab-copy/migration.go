@@ -154,9 +154,18 @@ func (m *migration) migrateIssue(issueID int) error {
 		iopts.Labels = append(iopts.Labels, label)
 	}
 	// Create target issue if not existing (same name)
-	ni, _, err := target.Issues.CreateIssue(tarProjectID, iopts)
+	ni, resp, err := target.Issues.CreateIssue(tarProjectID, iopts)
 	if err != nil {
-		return fmt.Errorf("target: error creating issue: %s", err.Error())
+		if resp.StatusCode == http.StatusRequestURITooLong {
+			fmt.Printf("target: catched a \"%s\" error, shortening issue's decription length ...\n", http.StatusText(resp.StatusCode))
+			iopts.Description = iopts.Description[:1024]
+			ni, _, err = target.Issues.CreateIssue(tarProjectID, iopts)
+			if err != nil {
+				return fmt.Errorf("target: error creating empty issue: %s", err.Error())
+			}
+		} else {
+			return fmt.Errorf("target: error creating issue: %s", err.Error())
+		}
 	}
 
 	// Copy related notes (comments)
@@ -166,10 +175,20 @@ func (m *migration) migrateIssue(issueID int) error {
 	}
 	opts := &gitlab.CreateIssueNoteOptions{}
 	for _, n := range notes {
-		opts.Body = fmt.Sprintf("%s @%s wrote on %s :\n\n%s", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123), n.Body)
-		_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
+		head := fmt.Sprintf("%s @%s wrote on %s :", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123))
+		opts.Body = fmt.Sprintf("%s\n\n%s", head, n.Body)
+		_, resp, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
 		if err != nil {
-			return fmt.Errorf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
+			if resp.StatusCode == http.StatusRequestURITooLong {
+				fmt.Printf("target: note's body too long, shortening it ...\n")
+				opts.Body = fmt.Sprintf("%s\n\n%s", head, n.Body[:1024])
+				_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
+				if err != nil {
+					return fmt.Errorf("target: error creating note (with shorter body) for issue #%d: %s", ni.IID, err.Error())
+				}
+			} else {
+				return fmt.Errorf("target: error creating note for issue #%d: %s", ni.IID, err.Error())
+			}
 		}
 	}
 
