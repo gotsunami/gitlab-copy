@@ -55,7 +55,8 @@ from:
 ...
 ```
 
-In order to copy all labels from one project to another, just append an `labelsOnly` entry in the `from` section:
+In order to copy all labels from one project to another (labels only, not issues), just append an `labelsOnly`
+entry in the `from` section:
 
 
 ```yaml
