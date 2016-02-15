@@ -55,7 +55,7 @@ from:
 ...
 ```
 
-In order to copy all labels from one project to another (labels only, not issues), just append an `labelsOnly`
+In order to copy all labels from one project to another (labels only, not issues), just append a `labelsOnly`
 entry in the `from` section:
 
 
