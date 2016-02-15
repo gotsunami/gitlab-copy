@@ -21,14 +21,16 @@ func map2Human(m map[string]int) string {
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, fmt.Sprintf("Usage: %s [options] configfile\n", os.Args[0]))
-		fmt.Fprintf(os.Stderr, `Where configfile holds YAML data like:
+		fmt.Fprintf(os.Stderr, `Where configfile holds YAML looks like:
 from:
     url: https://gitlab.mydomain.com
     token: atoken
     project: namespace/project
     issues:
-      - 5
-      - 8-10
+    - 5
+    - 8-10
+    # Set labelsOnly to copy labels only, not issues
+    # labelsOnly: true
 to:
     url: https://gitlab.myotherdomain.com
     token: anothertoken
@@ -102,23 +104,29 @@ Options:
 		fmt.Printf("source: %d label(s): %s\n", len(pstats.labels), map2Human(pstats.labels))
 	}
 
-	fmt.Printf("source: counting notes (comments), can take a while ... ")
-	if err := pstats.computeIssueNotes(m.endpoint.from); err != nil {
-		log.Fatal(err)
+	if !c.From.LabelsOnly {
+		fmt.Printf("source: counting notes (comments), can take a while ... ")
+		if err := pstats.computeIssueNotes(m.endpoint.from); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")
 	}
-	fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")
 	fmt.Println("--")
 	if !*apply {
-		fmt.Println(`Copy policies are:
+		if c.From.LabelsOnly {
+			fmt.Println("Will copy labels only.")
+		} else {
+			fmt.Println(`Copy policies are:
 - Copy milestones if not existing on target
 - Copy all source labels on target
 - Copy all issues (or those specified) if not existing on target (by title)
 - Copy closed status on issues, if any
 - Set issue's assignee (if user exists) and milestone, if any
 - Copy notes (attached to issues)
-
-Now use the -y flag if that looks good to you to start the issues migration.
 `)
+		}
+
+		fmt.Println("Now use the -y flag if that looks good to you to start the issues migration.")
 		os.Exit(0)
 	}
 

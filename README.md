@@ -16,7 +16,7 @@ Installing `gitlab-copy` is very easy since it comes as a static binary with no 
 The following features are available:
 
 - Copy milestones if not existing on target
-- Copy all source labels on target
+- Copy all source labels on target (use `labelsOnly` to copy labels only, see below)
 - Copy issues if not existing on target (by title)
 - Apply closed status on issues, if any
 - Set issue's assignee (if user exists) and milestone, if any
@@ -52,6 +52,22 @@ from:
   issues:
   - 15
   - 20-30
+...
+```
+
+In order to copy all labels from one project to another, just append an `labelsOnly` entry in the `from` section:
+
+
+```yaml
+from:
+  url: https://gitlab.mydomain.com
+  token: atoken
+  project: namespace/project
+  labelsOnly: true
+to:
+  url: https://gitlab.sameorotherdomain.com
+  token: anothertoken
+  project: namespace/otherproject
 ...
 ```
 

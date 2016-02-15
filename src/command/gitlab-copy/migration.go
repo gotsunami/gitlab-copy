@@ -247,6 +247,11 @@ func (m *migration) migrate() error {
 		}
 	}
 
+	if m.params.From.LabelsOnly {
+		// We're done here
+		return nil
+	}
+
 	fmt.Println("Copying issues ...")
 
 	// First, count issues

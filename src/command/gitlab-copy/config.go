@@ -27,6 +27,8 @@ type project struct {
 	Issues    []string
 	// Same as Issues but converted to int by parseConfig
 	issues []issueRange
+	// If true, ignore source issues and copy labels only
+	LabelsOnly bool `yaml:"labelsOnly"`
 }
 
 // matches checks whether issue is part of p.issues. Always
