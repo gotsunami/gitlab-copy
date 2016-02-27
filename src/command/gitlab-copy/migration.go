@@ -193,7 +193,7 @@ func (m *migration) migrateIssue(issueID int) error {
 	}
 
 	if issue.State == "closed" {
-		_, _, err := target.Issues.UpdateIssue(tarProjectID, ni.ID, &gitlab.UpdateIssueOptions{StateEvent: "close"})
+		_, _, err := target.Issues.UpdateIssue(tarProjectID, ni.ID, &gitlab.UpdateIssueOptions{StateEvent: "close", Labels: issue.Labels})
 		if err != nil {
 			return fmt.Errorf("target: error closing issue #%d: %s", ni.IID, err.Error())
 		}
