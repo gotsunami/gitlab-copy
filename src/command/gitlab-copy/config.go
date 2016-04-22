@@ -29,6 +29,8 @@ type project struct {
 	issues []issueRange
 	// If true, ignore source issues and copy labels only
 	LabelsOnly bool `yaml:"labelsOnly"`
+	// If true, move the issues (delete theme from the source project)
+	MoveIssues bool `yaml:"moveIssues"`
 }
 
 // matches checks whether issue is part of p.issues. Always
@@ -46,7 +48,7 @@ func (p *project) matches(issue int) bool {
 	return false
 }
 
-// parseIssues ensure issues items are valid input data, i.e castable
+// parseIssues ensure issue items are valid input data, i.e castable
 // to int, ranges allowed.
 func (p *project) parseIssues() error {
 	p.issues = make([]issueRange, 0)

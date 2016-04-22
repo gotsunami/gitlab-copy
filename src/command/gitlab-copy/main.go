@@ -31,6 +31,8 @@ from:
     - 8-10
     # Set labelsOnly to copy labels only, not issues
     # labelsOnly: true
+	# Move issues instead of copying them
+	# moveIssues: true
 to:
     url: https://gitlab.myotherdomain.com
     token: anothertoken
@@ -116,14 +118,18 @@ Options:
 		if c.From.LabelsOnly {
 			fmt.Println("Will copy labels only.")
 		} else {
-			fmt.Println(`Copy policies are:
+			action := "Copy"
+			if c.From.MoveIssues {
+				action = "Move"
+			}
+			fmt.Printf(`Copy policies are:
 - Copy milestones if not existing on target
 - Copy all source labels on target
-- Copy all issues (or those specified) if not existing on target (by title)
+- %s all issues (or those specified) if not existing on target (by title)
 - Copy closed status on issues, if any
 - Set issue's assignee (if user exists) and milestone, if any
 - Copy notes (attached to issues)
-`)
+`, action)
 		}
 
 		fmt.Println("Now use the -y flag if that looks good to you to start the issues migration.")
