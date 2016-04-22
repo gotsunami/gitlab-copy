@@ -17,8 +17,8 @@
 package gitlab
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -124,10 +124,10 @@ type Client struct {
 // support pagination.
 type ListOptions struct {
 	// For paginated result sets, page of results to retrieve.
-	Page int `url:"page,omitempty"`
+	Page int `url:"page,omitempty" json:"page,omitempty"`
 
 	// For paginated result sets, the number of results to include per page.
-	PerPage int `url:"per_page,omitempty"`
+	PerPage int `url:"per_page,omitempty" json:"per_page,omitempty"`
 }
 
 // NewClient returns a new GitLab API client. If a nil httpClient is
@@ -216,8 +216,23 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*http.Request
 		Host:       u.Host,
 	}
 
+	if method == "POST" || method == "PUT" {
+		bodyBytes, err := json.Marshal(opt)
+		if err != nil {
+			return nil, err
+		}
+		bodyReader := bytes.NewReader(bodyBytes)
+
+		u.RawQuery = ""
+		req.Body = ioutil.NopCloser(bodyReader)
+		req.ContentLength = int64(bodyReader.Len())
+		req.Header.Set("Content-Type", "application/json")
+	}
+
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("PRIVATE-TOKEN", c.token)
+	if c.token != "" {
+		req.Header.Set("PRIVATE-TOKEN", c.token)
+	}
 	if c.UserAgent != "" {
 		req.Header.Set("User-Agent", c.UserAgent)
 	}
@@ -334,7 +349,7 @@ func parseID(id interface{}) (string, error) {
 	case string:
 		return v, nil
 	default:
-		return "", errors.New("the ID must be an int or a string")
+		return "", fmt.Errorf("invalid ID type %#v, the ID must be an int or a string", id)
 	}
 }
 

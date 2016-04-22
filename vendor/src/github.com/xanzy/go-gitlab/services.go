@@ -49,8 +49,8 @@ type Service struct {
 // GitLab API docs:
 // http://doc.gitlab.com/ce/api/services.html#edit-gitlab-ci-service
 type SetGitLabCIServiceOptions struct {
-	Token      string `url:"token,omitempty"`
-	ProjectURL string `url:"project_url,omitempty"`
+	Token      string `url:"token,omitempty" json:"token,omitempty"`
+	ProjectURL string `url:"project_url,omitempty" json:"project_url,omitempty"`
 }
 
 // SetGitLabCIService sets GitLab CI service for a project.
@@ -109,8 +109,8 @@ func (s *ServicesService) DeleteGitLabCIService(pid interface{}) (*Response, err
 // GitLab API docs:
 // http://doc.gitlab.com/ce/api/services.html#edit-hipchat-service
 type SetHipChatServiceOptions struct {
-	Token string `url:"token,omitempty"`
-	Room  string `url:"room,omitempty"`
+	Token string `url:"token,omitempty" json:"token,omitempty" `
+	Room  string `url:"room,omitempty" json:"room,omitempty"`
 }
 
 // SetHipChatService sets HipChat service for a project
@@ -169,9 +169,9 @@ func (s *ServicesService) DeleteHipChatService(pid interface{}) (*Response, erro
 // GitLab API docs:
 // http://doc.gitlab.com/ce/api/services.html#createedit-drone-ci-service
 type SetDroneCIServiceOptions struct {
-	Token                   string `url:"token"`
-	DroneURL                string `url:"drone_url"`
-	EnableSSLVerification   string `url:"enable_ssl_verification,omitempty"`
+	Token                   string `url:"token" json:"token" `
+	DroneURL                string `url:"drone_url" json:"drone_url"`
+	EnableSSLVerification   string `url:"enable_ssl_verification,omitempty" json:"enable_ssl_verification,omitempty"`
 }
 
 // SetDroneCIService sets Drone CI service for a project.
@@ -226,9 +226,9 @@ func (s *ServicesService) DeleteDroneCIService(pid interface{}) (*Response, erro
 
 // DroneCIServiceProperties represents Drone CI specific properties.
 type DroneCIServiceProperties struct {
-	Token                   *string `url:"token"`
-	DroneURL                *string `url:"drone_url"`
-	EnableSSLVerification   *string `url:"enable_ssl_verification"`
+	Token                   *string `url:"token" json:"token"`
+	DroneURL                *string `url:"drone_url" json:"drone_url"`
+	EnableSSLVerification   *string `url:"enable_ssl_verification" json:"enable_ssl_verification"`
 }
 
 // DroneCIService represents Drone CI service settings.
@@ -260,4 +260,65 @@ func (s *ServicesService) GetDroneCIService(pid interface{}) (*DroneCIService, *
 	}
 
 	return opt, resp, err
+}
+
+// SetSlackServiceOptions represents the available SetSlackService()
+// options.
+//
+// GitLab API docs:
+// http://doc.gitlab.com/ce/api/services.html#edit-slack-service
+type SetSlackServiceOptions struct {
+	WebHook  string `url:"webhook,omitempty" json:"webhook,omitempty" `
+	Username string `url:"username,omitempty" json:"username,omitempty" `
+	Channel  string `url:"channel,omitempty" json:"channel,omitempty"`
+}
+
+// SetSlackService sets Slack service for a project
+//
+// GitLab API docs:
+// http://doc.gitlab.com/ce/api/services.html#edit-slack-service
+func (s *ServicesService) SetSlackService(
+	pid interface{},
+	opt *SetSlackServiceOptions) (*Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, err
+	}
+	u := fmt.Sprintf("projects/%s/services/slack", url.QueryEscape(project))
+
+	req, err := s.client.NewRequest("PUT", u, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		return resp, err
+	}
+
+	return resp, err
+}
+
+// DeleteSlackService deletes Slack service for project.
+//
+// GitLab API docs:
+// http://doc.gitlab.com/ce/api/services.html#delete-slack-service
+func (s *ServicesService) DeleteSlackService(pid interface{}) (*Response, error) {
+	project, err := parseID(pid)
+	if err != nil {
+		return nil, err
+	}
+	u := fmt.Sprintf("projects/%s/services/slack", url.QueryEscape(project))
+
+	req, err := s.client.NewRequest("DELETE", u, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		return resp, err
+	}
+
+	return resp, err
 }
