@@ -7,6 +7,8 @@
 
 `gitlab-copy` won't copy anything until told **explicitely** to do so. Running it from the command line will show some stats only.
 
+**Note**: GitLab 8.6 introduced the ability [to move an issue to another project](https://about.gitlab.com/2016/03/22/gitlab-8-6-released/), but on the same GitLab installation only. `gitlab-copy` can still prove valuable to move issues between projects on different GitLab hosts and to perform batch operations from the command line (see the feature list below).
+
 ## Download
 
 Installing `gitlab-copy` is very easy since it comes as a static binary with no dependencies. Just [grab a compiled version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your platform (or have a look to the **Compile From Source** section).
