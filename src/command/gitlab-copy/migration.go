@@ -279,6 +279,13 @@ func (m *migration) migrate() error {
 			if err := m.migrateIssue(issue.ID); err != nil {
 				log.Printf(err.Error())
 			}
+			if m.params.From.MoveIssues {
+				// Delete issue from source project
+				_, err := source.Issues.DeleteIssue(srcProjectID, issue.ID)
+				if err != nil {
+					log.Printf("could not delete the issue %d: %s", issue.ID, err.Error())
+				}
+			}
 		}
 	}
 
