@@ -77,7 +77,7 @@ As of version `v0.6.6`, notes in issues can preserve original user ownership whe
 to
 
 - have tokens for all users involved
-- add related users as members of the target project beforehand (with at lest a *Reporter* permission)
+- add related users as members of the target project beforehand (with at least a *Reporter* permission)
 - add a `users` entry into the `to` target section:
 
 ```yaml
