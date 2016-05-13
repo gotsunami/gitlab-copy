@@ -60,7 +60,6 @@ from:
 In order to copy all labels from one project to another (labels only, not issues), just append a `labelsOnly`
 entry in the `from` section:
 
-
 ```yaml
 from:
   url: https://gitlab.mydomain.com
@@ -72,6 +71,24 @@ to:
   token: anothertoken
   project: namespace/otherproject
 ...
+```
+
+As of version `v0.6.6`, notes in issues can preserve original user ownership when copied. To do that, you need
+to
+
+- have tokens for all users involved
+- add related users as members of the target project beforehand (with at lest a *Reporter* permission)
+- add a `users` entry into the `to` target section:
+
+```yaml
+...
+to:
+  url: https://gitlab.sameorotherdomain.com
+  token: anothertoken
+  project: namespace/otherproject
+  users:
+    bob: anothertoken
+    alice: herowntoken
 ```
 
 Now grab some project stats by running

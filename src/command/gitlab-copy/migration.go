@@ -24,12 +24,16 @@ type migration struct {
 	params                 *config
 	endpoint               *endpoint
 	srcProject, dstProject *gitlab.Project
+	toUsers                map[string]*gitlab.Client
 }
 
 func NewMigration(c *config) (*migration, error) {
 	if c == nil {
 		return nil, errors.New("nil params")
 	}
+	m := &migration{params: c}
+	m.toUsers = make(map[string]*gitlab.Client)
+
 	fromgl := gitlab.NewClient(nil, c.From.Token)
 	if err := fromgl.SetBaseURL(c.From.ServerURL); err != nil {
 		return nil, err
@@ -38,7 +42,14 @@ func NewMigration(c *config) (*migration, error) {
 	if err := togl.SetBaseURL(c.To.ServerURL); err != nil {
 		return nil, err
 	}
-	m := &migration{params: c, endpoint: &endpoint{fromgl, togl}}
+	for user, token := range c.To.Users {
+		uc := gitlab.NewClient(nil, token)
+		if err := uc.SetBaseURL(c.To.ServerURL); err != nil {
+			return nil, err
+		}
+		m.toUsers[user] = uc
+	}
+	m.endpoint = &endpoint{fromgl, togl}
 	return m, nil
 }
 
@@ -156,7 +167,7 @@ func (m *migration) migrateIssue(issueID int) error {
 	// Create target issue if not existing (same name)
 	ni, resp, err := target.Issues.CreateIssue(tarProjectID, iopts)
 	if err != nil {
-		if resp.StatusCode == http.StatusRequestURITooLong {
+		if resp != nil && resp.StatusCode == http.StatusRequestURITooLong {
 			fmt.Printf("target: catched a \"%s\" error, shortening issue's decription length ...\n", http.StatusText(resp.StatusCode))
 			iopts.Description = iopts.Description[:1024]
 			ni, _, err = target.Issues.CreateIssue(tarProjectID, iopts)
@@ -175,13 +186,21 @@ func (m *migration) migrateIssue(issueID int) error {
 	}
 	opts := &gitlab.CreateIssueNoteOptions{}
 	for _, n := range notes {
-		head := fmt.Sprintf("%s @%s wrote on %s :", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123))
-		opts.Body = fmt.Sprintf("%s\n\n%s", head, n.Body)
+		target = m.endpoint.to
+		// Can we write the comment with user ownership?
+		if _, ok := m.toUsers[n.Author.Username]; ok {
+			target = m.toUsers[n.Author.Username]
+			opts.Body = n.Body
+		} else {
+			// Nope. Let's add a header note instead.
+			head := fmt.Sprintf("%s @%s wrote on %s :", n.Author.Name, n.Author.Username, n.CreatedAt.Format(time.RFC1123))
+			opts.Body = fmt.Sprintf("%s\n\n%s", head, n.Body)
+		}
 		_, resp, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
 		if err != nil {
 			if resp.StatusCode == http.StatusRequestURITooLong {
 				fmt.Printf("target: note's body too long, shortening it ...\n")
-				opts.Body = fmt.Sprintf("%s\n\n%s", head, n.Body[:1024])
+				opts.Body = opts.Body[:1024]
 				_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
 				if err != nil {
 					return fmt.Errorf("target: error creating note (with shorter body) for issue #%d: %s", ni.IID, err.Error())
@@ -191,6 +210,7 @@ func (m *migration) migrateIssue(issueID int) error {
 			}
 		}
 	}
+	target = m.endpoint.to
 
 	if issue.State == "closed" {
 		_, _, err := target.Issues.UpdateIssue(tarProjectID, ni.ID, &gitlab.UpdateIssueOptions{StateEvent: "close", Labels: issue.Labels})

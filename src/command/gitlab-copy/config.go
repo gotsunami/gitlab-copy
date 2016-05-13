@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-yaml"
+	"github.com/xanzy/go-gitlab"
 )
 
 const (
@@ -24,13 +25,16 @@ type project struct {
 	ServerURL string `yaml:"url"`
 	Name      string `yaml:"project"`
 	Token     string
-	Issues    []string
+	// Optional list of specific issues to move
+	Issues []string
 	// Same as Issues but converted to int by parseConfig
 	issues []issueRange
 	// If true, ignore source issues and copy labels only
 	LabelsOnly bool `yaml:"labelsOnly"`
 	// If true, move the issues (delete theme from the source project)
 	MoveIssues bool `yaml:"moveIssues"`
+	// Optional user tokens to write notes preserving ownership
+	Users map[string]string `yaml:"users"`
 }
 
 // matches checks whether issue is part of p.issues. Always
@@ -128,9 +132,35 @@ func parseConfig(name string) (*config, error) {
 	if err := checkProjectData(c.To, "destination"); err != nil {
 		return nil, err
 	}
+	if err := c.checkUserTokens(); err != nil {
+		return nil, err
+	}
 	if err := c.From.parseIssues(); err != nil {
 		return nil, err
 	}
 
 	return c, nil
+}
+
+func (c *config) checkUserTokens() error {
+	if len(c.To.Users) == 0 {
+		return nil
+	}
+	fmt.Printf("User tokens provided (for writing notes): %d\n", len(c.To.Users))
+	fmt.Println("Checking user tokens ... ")
+	for user, token := range c.To.Users {
+		cl := gitlab.NewClient(nil, token)
+		if err := cl.SetBaseURL(c.To.ServerURL); err != nil {
+			return err
+		}
+		u, _, err := cl.Users.CurrentUser()
+		if err != nil {
+			return fmt.Errorf("Failed using the API with user '%s': %s", user, err.Error())
+		}
+		if u.Username != user {
+			return fmt.Errorf("Token %s matches user '%s', not '%s' as defined in the config file", token, u.Username, user)
+		}
+	}
+	fmt.Println("Tokens valid and mapping to expected users\n--")
+	return nil
 }

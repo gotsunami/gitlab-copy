@@ -29,10 +29,10 @@ from:
     issues:
     - 5
     - 8-10
-    # Set labelsOnly to copy labels only, not issues
+    ## Set labelsOnly to copy labels only, not issues
     # labelsOnly: true
-	# Move issues instead of copying them
-	# moveIssues: true
+    ## Move issues instead of copying them
+    # moveIssues: true
 to:
     url: https://gitlab.myotherdomain.com
     token: anothertoken
