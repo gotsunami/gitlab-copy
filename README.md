@@ -22,8 +22,11 @@ The following features are available:
 - Copy issues if not existing on target (by title)
 - Apply closed status on issues, if any
 - Set issue's assignee (if user exists) and milestone, if any
-- Copy notes (attached to issues)
+- Copy notes (attached to issues), preserving user ownership
 - Can specify in the config file a specific issue or range of issues to copy
+- Auto-close source issues after copy
+- Add a note with a link to the new issue created in the target project
+- Use a custom link text template, like "Closed in favor or me/myotherproject#12"
 
 ## Usage
 

@@ -35,6 +35,12 @@ type project struct {
 	MoveIssues bool `yaml:"moveIssues"`
 	// Optional user tokens to write notes preserving ownership
 	Users map[string]string `yaml:"users"`
+	// If true, auto close source issue
+	AutoCloseIssues bool `yaml:"autoCloseIssues"`
+	// If true, add a link to target issue
+	LinkToTargetIssue bool `yaml:"linkToTargetIssue"`
+	// Optional caption to use for the link text
+	LinkToTargetIssueText string `yaml:"linkToTargetIssueText"`
 }
 
 // matches checks whether issue is part of p.issues. Always
@@ -137,6 +143,9 @@ func parseConfig(name string) (*config, error) {
 	}
 	if err := c.From.parseIssues(); err != nil {
 		return nil, err
+	}
+	if c.From.LinkToTargetIssueText == "" {
+		c.From.LinkToTargetIssueText = "Closed in favor of {{.Link}}"
 	}
 
 	return c, nil

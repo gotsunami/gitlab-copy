@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"sort"
+	"text/template"
 	"time"
 
 	"github.com/xanzy/go-gitlab"
@@ -219,8 +221,42 @@ func (m *migration) migrateIssue(issueID int) error {
 			return fmt.Errorf("target: error closing issue #%d: %s", ni.IID, err.Error())
 		}
 	}
-	fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, issue.State)
+	// Add a link to target issue if needed
+	if m.params.From.LinkToTargetIssue {
+		var dstProjectURL string
+		// Strip URL if moving on the same GitLab  installation.
+		if m.endpoint.from.BaseURL().Host == m.endpoint.to.BaseURL().Host {
+			dstProjectURL = *m.dstProject.PathWithNamespace
+		} else {
+			dstProjectURL = *m.dstProject.WebURL
+		}
+		tmpl, err := template.New("link").Parse(m.params.From.LinkToTargetIssueText)
+		if err != nil {
+			return fmt.Errorf("link to target issue: error parsing linkToTargetIssueText parameter: %s", err.Error())
+		}
+		noteLink := fmt.Sprintf("%s#%d", dstProjectURL, ni.IID)
+		type link struct {
+			Link string
+		}
+		buf := new(bytes.Buffer)
+		if err := tmpl.Execute(buf, &link{noteLink}); err != nil {
+			return fmt.Errorf("link to target issue: %s", err.Error())
+		}
+		opts := &gitlab.CreateIssueNoteOptions{buf.String()}
+		_, _, err = target.Notes.CreateIssueNote(srcProjectID, issue.ID, opts)
+		if err != nil {
+			return fmt.Errorf("source: error adding closing note for issue #%d: %s", issue.IID, err.Error())
+		}
+	}
+	// Auto close source issue if needed
+	if m.params.From.AutoCloseIssues {
+		_, _, err := source.Issues.UpdateIssue(srcProjectID, issue.ID, &gitlab.UpdateIssueOptions{StateEvent: "close", Labels: issue.Labels})
+		if err != nil {
+			return fmt.Errorf("source: error closing issue #%d: %s", issue.IID, err.Error())
+		}
+	}
 
+	fmt.Printf("target: created issue #%d: %s [%s]\n", ni.IID, ni.Title, issue.State)
 	return nil
 }
 
