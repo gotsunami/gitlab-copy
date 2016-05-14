@@ -185,7 +185,8 @@ func (m *migration) migrateIssue(issueID int) error {
 		return fmt.Errorf("source: can't get issue #%d notes: %s", issue.ID, err.Error())
 	}
 	opts := &gitlab.CreateIssueNoteOptions{}
-	for _, n := range notes {
+	for j := len(notes) - 1; j >= 0; j-- {
+		n := notes[j]
 		target = m.endpoint.to
 		// Can we write the comment with user ownership?
 		if _, ok := m.toUsers[n.Author.Username]; ok {
