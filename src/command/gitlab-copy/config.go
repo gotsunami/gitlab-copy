@@ -31,6 +31,8 @@ type project struct {
 	issues []issueRange
 	// If true, ignore source issues and copy labels only
 	LabelsOnly bool `yaml:"labelsOnly"`
+	// If true, ignore source issues and copy milestones only
+	MilestonesOnly bool `yaml:"milestonesOnly"`
 	// If true, move the issues (delete theme from the source project)
 	MoveIssues bool `yaml:"moveIssues"`
 	// Optional user tokens to write notes preserving ownership

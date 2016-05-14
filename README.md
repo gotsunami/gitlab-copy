@@ -17,7 +17,7 @@ Installing `gitlab-copy` is very easy since it comes as a static binary with no 
 
 The following features are available:
 
-- Copy milestones if not existing on target
+- Copy milestones if not existing on target (use `milestonesOnly` to copy milestones only, see below)
 - Copy all source labels on target (use `labelsOnly` to copy labels only, see below)
 - Copy issues if not existing on target (by title)
 - Apply closed status on issues, if any
@@ -76,7 +76,17 @@ to:
 ...
 ```
 
-As of version `v0.6.6`, notes in issues can preserve original user ownership when copied. To do that, you need
+In order to copy all milestones only, just add a `milestonesOnly` entry in the `from` section:
+```yaml
+from:
+  url: https://gitlab.mydomain.com
+  token: atoken
+  project: namespace/project
+  milestonesOnly: true
+...
+```
+
+Notes in issues can preserve original user ownership when copied. To do that, you need
 to
 
 - have tokens for all users involved

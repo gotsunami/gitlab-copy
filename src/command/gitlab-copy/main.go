@@ -118,11 +118,14 @@ Options:
 		if c.From.LabelsOnly {
 			fmt.Println("Will copy labels only.")
 		} else {
-			action := "Copy"
-			if c.From.MoveIssues {
-				action = "Move"
-			}
-			fmt.Printf(`Those actions will be performed:
+			if c.From.MilestonesOnly {
+				fmt.Println("Will copy milestones only.")
+			} else {
+				action := "Copy"
+				if c.From.MoveIssues {
+					action = "Move"
+				}
+				fmt.Printf(`Those actions will be performed:
 - Copy milestones if not existing on target
 - Copy all source labels on target
 - %s all issues (or those specified) if not existing on target (by title)
@@ -130,12 +133,13 @@ Options:
 - Set issue's assignee (if user exists) and milestone, if any
 - Copy notes (attached to issues)
 `, action)
-			if c.From.AutoCloseIssues {
-				fmt.Println("- Auto-close source issues")
-			}
-			if c.From.LinkToTargetIssue {
-				fmt.Println("- Add a note with a link to new issue")
-				fmt.Println("- Use the link text template: " + c.From.LinkToTargetIssueText)
+				if c.From.AutoCloseIssues {
+					fmt.Println("- Auto-close source issues")
+				}
+				if c.From.LinkToTargetIssue {
+					fmt.Println("- Add a note with a link to new issue")
+					fmt.Println("- Use the link text template: " + c.From.LinkToTargetIssueText)
+				}
 			}
 		}
 

@@ -309,6 +309,37 @@ func (m *migration) migrate() error {
 		return nil
 	}
 
+	if m.params.From.MilestonesOnly {
+		fmt.Println("Copying milestones ...")
+		miles, _, err := source.Milestones.ListMilestones(srcProjectID, nil)
+		if err != nil {
+			return fmt.Errorf("error getting the milestones from source project: %s", err.Error())
+		}
+		for _, mi := range miles {
+			// Create target milestone
+			cmopts := &gitlab.CreateMilestoneOptions{
+				Title:       mi.Title,
+				Description: mi.Description,
+				DueDate:     mi.DueDate,
+			}
+			tmi, _, err := target.Milestones.CreateMilestone(tarProjectID, cmopts)
+			if err != nil {
+				return fmt.Errorf("target: error creating milestone '%s': %s", mi.Title, err.Error())
+			}
+			if mi.State == "closed" {
+				umopts := &gitlab.UpdateMilestoneOptions{
+					StateEvent: "close",
+				}
+				_, _, err := target.Milestones.UpdateMilestone(tarProjectID, tmi.ID, umopts)
+				if err != nil {
+					return fmt.Errorf("target: error closing milestone '%s': %s", mi.Title, err.Error())
+				}
+			}
+		}
+		// We're done here
+		return nil
+	}
+
 	fmt.Println("Copying issues ...")
 
 	// First, count issues
