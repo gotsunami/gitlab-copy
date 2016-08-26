@@ -19,12 +19,17 @@ to:
 func TestMap2Human(t *testing.T) {
 	cc := []struct {
 		m   map[string]int
-		exp string
+		exp func(map[string]int) error
 	}{
-		{map[string]int{"a": 0, "b": 0, "c": 0}, "a, b, c"},
+		{map[string]int{"a": 0, "b": 0, "c": 0},
+			func(p map[string]int) error {
+				// FIXME
+				return nil
+			},
+		},
 	}
 	for _, v := range cc {
-		if map2Human(v.m) != v.exp {
+		if err := v.exp(v.m); err != nil {
 			t.Errorf("expect '%s', got '%s'", v.exp, map2Human(v.m))
 		}
 	}
