@@ -33,8 +33,12 @@ type LabelsService struct {
 //
 // GitLab API docs: http://doc.gitlab.com/ce/api/labels.html
 type Label struct {
-	Name  string `json:"name"`
-	Color string `json:"color"`
+	Name                   string `json:"name"`
+	Color                  string `json:"color"`
+	Description            string `json:"description"`
+	OpenIssuesCount        int    `json:"open_issues_count"`
+	ClosedIssuesCount      int    `json:"closed_issues_count"`
+	OpenMergeRequestsCount int    `json:"open_merge_requests_count"`
 }
 
 func (l Label) String() string {
@@ -69,8 +73,9 @@ func (s *LabelsService) ListLabels(pid interface{}) ([]*Label, *Response, error)
 //
 // GitLab API docs: http://doc.gitlab.com/ce/api/labels.html#create-a-new-label
 type CreateLabelOptions struct {
-	Name  string `url:"name,omitempty" json:"name,omitempty"`
-	Color string `url:"color,omitempty" json:"color,omitempty"`
+	Name        *string `url:"name,omitempty" json:"name,omitempty"`
+	Color       *string `url:"color,omitempty" json:"color,omitempty"`
+	Description *string `url:"description,omitempty" json:"description,omitempty"`
 }
 
 // CreateLabel creates a new label for given repository with given name and
@@ -104,7 +109,7 @@ func (s *LabelsService) CreateLabel(
 //
 // GitLab API docs: http://doc.gitlab.com/ce/api/labels.html#delete-a-label
 type DeleteLabelOptions struct {
-	Name string `url:"name,omitempty" json:"name,omitempty"`
+	Name *string `url:"name,omitempty" json:"name,omitempty"`
 }
 
 // DeleteLabel deletes a label given by its name.
@@ -122,21 +127,17 @@ func (s *LabelsService) DeleteLabel(pid interface{}, opt *DeleteLabelOptions) (*
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // UpdateLabelOptions represents the available UpdateLabel() options.
 //
 // GitLab API docs: http://doc.gitlab.com/ce/api/labels.html#delete-a-label
 type UpdateLabelOptions struct {
-	Name    string `url:"name,omitempty" json:"name,omitempty"`
-	NewName string `url:"new_name,omitempty" json:"new_name,omitempty"`
-	Color   string `url:"color,omitempty" json:"color,omitempty"`
+	Name        *string `url:"name,omitempty" json:"name,omitempty"`
+	NewName     *string `url:"new_name,omitempty" json:"new_name,omitempty"`
+	Color       *string `url:"color,omitempty" json:"color,omitempty"`
+	Description *string `url:"description,omitempty" json:"description,omitempty"`
 }
 
 // UpdateLabel updates an existing label with new name or now color. At least

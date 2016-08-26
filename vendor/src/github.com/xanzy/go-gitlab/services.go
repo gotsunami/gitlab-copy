@@ -49,8 +49,8 @@ type Service struct {
 // GitLab API docs:
 // http://doc.gitlab.com/ce/api/services.html#edit-gitlab-ci-service
 type SetGitLabCIServiceOptions struct {
-	Token      string `url:"token,omitempty" json:"token,omitempty"`
-	ProjectURL string `url:"project_url,omitempty" json:"project_url,omitempty"`
+	Token      *string `url:"token,omitempty" json:"token,omitempty"`
+	ProjectURL *string `url:"project_url,omitempty" json:"project_url,omitempty"`
 }
 
 // SetGitLabCIService sets GitLab CI service for a project.
@@ -71,12 +71,7 @@ func (s *ServicesService) SetGitLabCIService(
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // DeleteGitLabCIService deletes GitLab CI service settings for a project.
@@ -95,12 +90,7 @@ func (s *ServicesService) DeleteGitLabCIService(pid interface{}) (*Response, err
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // SetHipChatServiceOptions represents the available SetHipChatService()
@@ -109,8 +99,8 @@ func (s *ServicesService) DeleteGitLabCIService(pid interface{}) (*Response, err
 // GitLab API docs:
 // http://doc.gitlab.com/ce/api/services.html#edit-hipchat-service
 type SetHipChatServiceOptions struct {
-	Token string `url:"token,omitempty" json:"token,omitempty" `
-	Room  string `url:"room,omitempty" json:"room,omitempty"`
+	Token *string `url:"token,omitempty" json:"token,omitempty" `
+	Room  *string `url:"room,omitempty" json:"room,omitempty"`
 }
 
 // SetHipChatService sets HipChat service for a project
@@ -131,12 +121,7 @@ func (s *ServicesService) SetHipChatService(
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // DeleteHipChatService deletes HipChat service for project.
@@ -155,12 +140,7 @@ func (s *ServicesService) DeleteHipChatService(pid interface{}) (*Response, erro
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // SetDroneCIServiceOptions represents the available SetDroneCIService()
@@ -169,9 +149,9 @@ func (s *ServicesService) DeleteHipChatService(pid interface{}) (*Response, erro
 // GitLab API docs:
 // http://doc.gitlab.com/ce/api/services.html#createedit-drone-ci-service
 type SetDroneCIServiceOptions struct {
-	Token                   string `url:"token" json:"token" `
-	DroneURL                string `url:"drone_url" json:"drone_url"`
-	EnableSSLVerification   string `url:"enable_ssl_verification,omitempty" json:"enable_ssl_verification,omitempty"`
+	Token                 *string `url:"token" json:"token" `
+	DroneURL              *string `url:"drone_url" json:"drone_url"`
+	EnableSSLVerification *string `url:"enable_ssl_verification,omitempty" json:"enable_ssl_verification,omitempty"`
 }
 
 // SetDroneCIService sets Drone CI service for a project.
@@ -192,12 +172,7 @@ func (s *ServicesService) SetDroneCIService(
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // DeleteDroneCIService deletes Drone CI service settings for a project.
@@ -216,19 +191,14 @@ func (s *ServicesService) DeleteDroneCIService(pid interface{}) (*Response, erro
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // DroneCIServiceProperties represents Drone CI specific properties.
 type DroneCIServiceProperties struct {
-	Token                   *string `url:"token" json:"token"`
-	DroneURL                *string `url:"drone_url" json:"drone_url"`
-	EnableSSLVerification   *string `url:"enable_ssl_verification" json:"enable_ssl_verification"`
+	Token                 *string `url:"token" json:"token"`
+	DroneURL              *string `url:"drone_url" json:"drone_url"`
+	EnableSSLVerification *string `url:"enable_ssl_verification" json:"enable_ssl_verification"`
 }
 
 // DroneCIService represents Drone CI service settings.
@@ -268,9 +238,9 @@ func (s *ServicesService) GetDroneCIService(pid interface{}) (*DroneCIService, *
 // GitLab API docs:
 // http://doc.gitlab.com/ce/api/services.html#edit-slack-service
 type SetSlackServiceOptions struct {
-	WebHook  string `url:"webhook,omitempty" json:"webhook,omitempty" `
-	Username string `url:"username,omitempty" json:"username,omitempty" `
-	Channel  string `url:"channel,omitempty" json:"channel,omitempty"`
+	WebHook  *string `url:"webhook,omitempty" json:"webhook,omitempty" `
+	Username *string `url:"username,omitempty" json:"username,omitempty" `
+	Channel  *string `url:"channel,omitempty" json:"channel,omitempty"`
 }
 
 // SetSlackService sets Slack service for a project
@@ -291,12 +261,7 @@ func (s *ServicesService) SetSlackService(
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }
 
 // DeleteSlackService deletes Slack service for project.
@@ -315,10 +280,5 @@ func (s *ServicesService) DeleteSlackService(pid interface{}) (*Response, error)
 		return nil, err
 	}
 
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return resp, err
-	}
-
-	return resp, err
+	return s.client.Do(req, nil)
 }

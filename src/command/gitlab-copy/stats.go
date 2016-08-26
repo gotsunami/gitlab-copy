@@ -54,7 +54,7 @@ func (p *projectStats) computeStats(client *gitlab.Client) error {
 
 	action := func(c *gitlab.Client, lo *gitlab.ListOptions) (bool, error) {
 		opts := &gitlab.ListProjectIssuesOptions{ListOptions: gitlab.ListOptions{PerPage: lo.PerPage, Page: lo.Page}}
-		issues, _, err := client.Issues.ListProjectIssues(*p.project.ID, opts)
+		issues, _, err := client.Issues.ListProjectIssues(p.project.ID, opts)
 		if err != nil {
 			return false, err
 		}
@@ -82,7 +82,7 @@ func (p *projectStats) computeStats(client *gitlab.Client) error {
 		return err
 	}
 
-	labels, _, err := client.Labels.ListLabels(*p.project.ID)
+	labels, _, err := client.Labels.ListLabels(p.project.ID)
 	if err != nil {
 		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
 	}
@@ -99,13 +99,13 @@ func (p *projectStats) computeIssueNotes(client *gitlab.Client) error {
 
 	action := func(c *gitlab.Client, lo *gitlab.ListOptions) (bool, error) {
 		opts := &gitlab.ListProjectIssuesOptions{ListOptions: gitlab.ListOptions{PerPage: lo.PerPage, Page: lo.Page}}
-		issues, _, err := client.Issues.ListProjectIssues(*p.project.ID, opts)
+		issues, _, err := client.Issues.ListProjectIssues(p.project.ID, opts)
 		if err != nil {
 			return false, err
 		}
 		if len(issues) > 0 {
 			for _, issue := range issues {
-				notes, _, err := client.Notes.ListIssueNotes(*p.project.ID, issue.ID, nil)
+				notes, _, err := client.Notes.ListIssueNotes(p.project.ID, issue.ID, nil)
 				if err != nil {
 					return false, err
 				}

@@ -31,55 +31,68 @@ import (
 )
 
 const (
-	libraryVersion = "0.1"
+	libraryVersion = "0.1.1"
 	defaultBaseURL = "https://gitlab.com/api/v3/"
 	userAgent      = "go-gitlab/" + libraryVersion
 )
 
-// AccessLevel represents a permission level within GitLab.
+// tokenType represents a token type within GitLab.
+//
+// GitLab API docs: http://doc.gitlab.com/ce/api/
+type tokenType int
+
+// List of available token type
+//
+// GitLab API docs: http://doc.gitlab.com/ce/api/
+const (
+	privateToken tokenType = iota
+	oAuthToken
+)
+
+// AccessLevelValue represents a permission level within GitLab.
 //
 // GitLab API docs: http://doc.gitlab.com/ce/permissions/permissions.html
-type AccessLevel int
+type AccessLevelValue int
 
 // List of available access levels
 //
 // GitLab API docs: http://doc.gitlab.com/ce/permissions/permissions.html
 const (
-	GuestPermissions     AccessLevel = 10
-	ReporterPermissions  AccessLevel = 20
-	DeveloperPermissions AccessLevel = 30
-	MasterPermissions    AccessLevel = 40
-	OwnerPermission      AccessLevel = 50
+	GuestPermissions     AccessLevelValue = 10
+	ReporterPermissions  AccessLevelValue = 20
+	DeveloperPermissions AccessLevelValue = 30
+	MasterPermissions    AccessLevelValue = 40
+	OwnerPermission      AccessLevelValue = 50
 )
 
-// NotificationLevel represents a notification level within Gitlab.
+// NotificationLevelValue represents a notification level within Gitlab.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/...?
-type NotificationLevel int
+// GitLab API docs: http://doc.gitlab.com/ce/api/
+type NotificationLevelValue int
 
 // List of available notification levels
 //
-// GitLab API docs: http://doc.gitlab.com/ce/...?
+// GitLab API docs: http://doc.gitlab.com/ce/api/
 const (
-	DisabledNotifications NotificationLevel = iota
+	DisabledNotifications NotificationLevelValue = iota
 	ParticipatingNotifications
 	WatchNotifications
 	GlobalNotifications
 	MentionNotifications
 )
 
-// VisibilityLevel represents a visibility level within GitLab.
+// VisibilityLevelValue represents a visibility level within GitLab.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/...?
-type VisibilityLevel int
+// GitLab API docs: http://doc.gitlab.com/ce/api/
+type VisibilityLevelValue int
 
 // List of available visibility levels
 //
-// GitLab API docs: http://doc.gitlab.com/ce/...?
+// GitLab API docs: http://doc.gitlab.com/ce/api/
 const (
-	PrivateVisibility  VisibilityLevel = 0
-	InternalVisibility VisibilityLevel = 10
-	PublicVisibility   VisibilityLevel = 20
+	PrivateVisibility  VisibilityLevelValue = 0
+	InternalVisibility VisibilityLevelValue = 10
+	PublicVisibility   VisibilityLevelValue = 20
 )
 
 // A Client manages communication with the GitLab API.
@@ -92,7 +105,10 @@ type Client struct {
 	// should always be specified with a trailing slash.
 	baseURL *url.URL
 
-	// Private token used to make authenticated API calls.
+	// token type used to make authenticated API calls.
+	tokenType tokenType
+
+	// token used to make authenticated API calls.
 	token string
 
 	// User agent used when communicating with the GitLab API.
@@ -134,11 +150,22 @@ type ListOptions struct {
 // provided, http.DefaultClient will be used. To use API methods which require
 // authentication, provide a valid private token.
 func NewClient(httpClient *http.Client, token string) *Client {
+	return newClient(httpClient, privateToken, token)
+}
+
+// NewOAuthClient returns a new GitLab API client. If a nil httpClient is
+// provided, http.DefaultClient will be used. To use API methods which require
+// authentication, provide a valid oauth token.
+func NewOAuthClient(httpClient *http.Client, token string) *Client {
+	return newClient(httpClient, oAuthToken, token)
+}
+
+func newClient(httpClient *http.Client, tokenType tokenType, token string) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
 
-	c := &Client{client: httpClient, token: token, UserAgent: userAgent}
+	c := &Client{client: httpClient, tokenType: tokenType, token: token, UserAgent: userAgent}
 	if err := c.SetBaseURL(defaultBaseURL); err != nil {
 		// should never happen since defaultBaseURL is our constant
 		panic(err)
@@ -183,11 +210,7 @@ func (c *Client) SetBaseURL(urlStr string) error {
 
 	var err error
 	c.baseURL, err = url.Parse(urlStr)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // NewRequest creates an API request. A relative URL path can be provided in
@@ -230,9 +253,14 @@ func (c *Client) NewRequest(method, path string, opt interface{}) (*http.Request
 	}
 
 	req.Header.Set("Accept", "application/json")
-	if c.token != "" {
+
+	switch c.tokenType {
+	case privateToken:
 		req.Header.Set("PRIVATE-TOKEN", c.token)
+	case oAuthToken:
+		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
+
 	if c.UserAgent != "" {
 		req.Header.Set("User-Agent", c.UserAgent)
 	}
@@ -434,6 +462,22 @@ func Int(v int) *int {
 // to store v and returns a pointer to it.
 func String(v string) *string {
 	p := new(string)
+	*p = v
+	return p
+}
+
+// AccessLevel is a helper routine that allocates a new AccessLevelValue
+// to store v and returns a pointer to it.
+func AccessLevel(v AccessLevelValue) *AccessLevelValue {
+	p := new(AccessLevelValue)
+	*p = v
+	return p
+}
+
+// VisibilityLevel is a helper routine that allocates a new VisibilityLevelValue
+// to store v and returns a pointer to it.
+func VisibilityLevel(v VisibilityLevelValue) *VisibilityLevelValue {
+	p := new(VisibilityLevelValue)
 	*p = v
 	return p
 }
