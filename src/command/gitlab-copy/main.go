@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -49,7 +50,12 @@ Options:
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("version: %s\n", appVersion)
+		fmt.Printf("Version:      %s\n", Version)
+		fmt.Printf("Git revision: %s\n", GitRevision)
+		fmt.Printf("Git branch:   %s\n", GitBranch)
+		fmt.Printf("Go version:   %s\n", runtime.Version())
+		fmt.Printf("Built:        %s\n", Built)
+		fmt.Printf("OS/Arch:      %s/%s\n", runtime.GOOS, runtime.GOARCH)
 		os.Exit(0)
 	}
 
