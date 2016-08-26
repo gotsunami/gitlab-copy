@@ -22,5 +22,5 @@ const (
 EOF
 }
 
-FILE="src/command/gitlab-copy/version.go"
+FILE="cmd/gitlab-copy/version.go"
 writeVersion $FILE

@@ -12,15 +12,16 @@ GC_FREEBSD_AMD64=${GC_VERSION}-freebsd-amd64
 GC_LINUX_AMD64=${GC_VERSION}-linux-amd64
 GC_WINDOWS_AMD64=${GC_VERSION}-windows-amd64
 #
-GB_BUILD64=GOARCH=amd64 gb build
+GB_BUILD64=GOARCH=amd64 go build
+MAIN_CMD=${BIN}/cmd/${BIN}
 
 all: build
 
 build: version
-	@gb build
+	@go build -v -o bin/${BIN} ${MAIN_CMD}
 
 test: version
-	@gb test
+	@go test
 
 coverage:
 	@./tools/coverage.sh `pwd`
@@ -34,28 +35,29 @@ zip: linux darwin freebsd windows
 	@rm -rf ${GCDIR}
 
 linux:
-	@cp bin/${BIN} ${GCDIR}/${BIN} && \
+	@cp bin/${GC_VERSION}-linux* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_LINUX_AMD64}.zip ${BIN})
 
 darwin:
-	@cp bin/${BIN}-darwin* ${GCDIR}/${BIN} && \
+	@cp bin/${GC_VERSION}-darwin* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_DARWIN_AMD64}.zip ${BIN})
 
 windows:
-	@cp bin/${BIN}-windows* ${GCDIR}/${BIN} && \
+	@cp bin/${GC_VERSION}-windows* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_WINDOWS_AMD64}.zip ${BIN})
 
 freebsd:
-	@cp bin/${BIN}-freebsd* ${GCDIR}/${BIN} && \
+	@cp bin/${GC_VERSION}-freebsd* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_FREEBSD_AMD64}.zip ${BIN})
 
 buildall: version
-	@GOOS=darwin ${GB_BUILD64}
-	@GOOS=freebsd ${GB_BUILD64}
-	@GOOS=linux ${GB_BUILD64}
-	@GOOS=windows ${GB_BUILD64}
+	@GOOS=darwin ${GB_BUILD64} -v -o bin/${GC_DARWIN_AMD64} ${MAIN_CMD}
+	@GOOS=freebsd ${GB_BUILD64} -v -o bin/${GC_FREEBSD_AMD64} ${MAIN_CMD}
+	@GOOS=linux ${GB_BUILD64} -v -o bin/${GC_LINUX_AMD64} ${MAIN_CMD}
+	@GOOS=windows ${GB_BUILD64} -v -o bin/${GC_WINDOWS_AMD64} ${MAIN_CMD}
 
 version:
+	@mkdir -p ${GCDIR}
 	@./tools/version.sh
 
 cleardist:

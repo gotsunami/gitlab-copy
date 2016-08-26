@@ -40,7 +40,7 @@ push_to_coveralls() {
 }
 
 make_coverage() {
-    generate_cover_data $(gb list ./...)
+    generate_cover_data $(go list ./...)
     show_cover_report func
 }
 
