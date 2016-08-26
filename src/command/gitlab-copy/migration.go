@@ -301,7 +301,7 @@ func (m *migration) migrate() error {
 		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
 	}
 	for _, label := range labels {
-		clopts := &gitlab.CreateLabelOptions{Name: &label.Name, Color: &label.Color}
+		clopts := &gitlab.CreateLabelOptions{Name: &label.Name, Color: &label.Color, Description: &label.Description}
 		_, resp, err := target.Labels.CreateLabel(tarProjectID, clopts)
 		if err != nil {
 			// GitLab returns a 409 code if label already exists
