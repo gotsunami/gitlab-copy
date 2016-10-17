@@ -117,12 +117,13 @@ $ ./gitlab-copy -y gitlab.yml
 
 ## Compile From Source
 
-Ensure you have a working [Go](https://www.golang.org) 1.5+ installation then install [gb](http://getgb.io) to compile the project:
+Ensure you have a working [Go](https://www.golang.org) 1.5+ installation then:
 ```
-$ go get github.com/constabulary/gb/...
+$ go get -u github.com/gotsunami/gitlab-copy
+$ make
 ```
 
-- To build the project, just run `make`. The program gets compiled into `bin/gitlab-copy`
+- The program gets compiled into `bin/gitlab-copy`
 - Cross-compile with `make buildall`
 - Prepare distribution packages with `make dist`
 
