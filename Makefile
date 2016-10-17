@@ -13,7 +13,7 @@ GC_LINUX_AMD64=${GC_VERSION}-linux-amd64
 GC_WINDOWS_AMD64=${GC_VERSION}-windows-amd64
 #
 GB_BUILD64=GOARCH=amd64 go build
-MAIN_CMD=${BIN}/cmd/${BIN}
+MAIN_CMD=github.com/gotsunami/${BIN}/cmd/${BIN}
 
 all: build
 
