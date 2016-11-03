@@ -11,7 +11,7 @@
 
 ## Download
 
-Installing `gitlab-copy` is very easy since it comes as a static binary with no dependencies. Just [grab a compiled version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your platform (or have a look to the **Compile From Source** section).
+Installing `gitlab-copy` is very easy since it comes as a static binary with no dependencies. Just [grab a compiled version](https://github.com/gotsunami/gitlab-copy/releases/latest) for your system (or have a look at the **Compile From Source** section).
 
 ## Features
 
