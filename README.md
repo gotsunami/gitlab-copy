@@ -5,7 +5,7 @@
 
 `gitlab-copy` is a simple tool for copying issues/labels/milestones/notes from one GitLab project to another, possibly running on different GitLab instances.
 
-`gitlab-copy` won't copy anything until told **explicitely** to do so. Running it from the command line will show some stats only.
+By default, `gitlab-copy` won't copy anything until told **explicitely** to do so on the command line: running it from the command line will do nothing but showing some statistics.
 
 **Note**: GitLab 8.6 introduced the ability [to move an issue to another project](https://about.gitlab.com/2016/03/22/gitlab-8-6-released/), but on the same GitLab installation only. `gitlab-copy` can still prove valuable to move issues between projects on different GitLab hosts and to perform batch operations from the command line (see the feature list below).
 
