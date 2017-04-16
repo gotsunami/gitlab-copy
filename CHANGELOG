@@ -1,0 +1,36 @@
+v 0.6.7
+  - Copy labels description too. #16
+  - More verbose output for `-version` flag
+  - vendor: `xanzy/go-gitlab` library updated to v0.2.1
+  - Built with Go 1.7
+
+v 0.6.6
+  - Add moving issues capability, with `moveIssues`. #1
+  - Add support for user ID mapping in notes, with `users`. #5
+  - Auto-close an issue after copy, with a link to new one, with `autoCloseIssues`,
+    `linkToTargetIssue` and `linkToTargetIssueText` parameters. #6
+  - Add an option to copy milestones only, with `milestonesOnly`. #13
+  - Apply labels to closed issues (Manoj Govindan)
+
+v 0.6.5
+  - Copy labels only from one project to another. Use the `labelsOnly`
+    config entry. #9
+
+v 0.6.4
+  - Fixes GitLab HTTP 414 content too large, preventing skipping issue
+    creation on target. #8
+
+v 0.6.3
+  - Handles any trailing slash in server URI gracefully. #2
+  - Label color is preserved during copy. #3
+  - All source labels are copied to target project, even if not used in issues. #4
+
+v 0.6.2
+  - Preserves order of issues
+  - Doc fixes
+
+v 0.6.1
+  - Copy issues from one GitLab to another
+  - Tries to keep issue labels and milestones
+  - **Beta** software at the moment
+  - First public release
