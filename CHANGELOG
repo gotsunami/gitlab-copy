@@ -1,4 +1,5 @@
 v 0.6.7
+  - Update go-gitlab library to v0.5.1. #21
   - Copy labels description too. #16
   - More verbose output for `-version` flag
   - vendor: `xanzy/go-gitlab` library updated to v0.2.1
