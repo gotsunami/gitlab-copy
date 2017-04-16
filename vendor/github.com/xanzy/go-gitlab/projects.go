@@ -25,49 +25,80 @@ import (
 // ProjectsService handles communication with the repositories related methods
 // of the GitLab API.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html
 type ProjectsService struct {
 	client *Client
 }
 
 // Project represents a GitLab project.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html
 type Project struct {
-	ID                   int                  `json:"id"`
-	Description          string               `json:"description"`
-	DefaultBranch        string               `json:"default_branch"`
-	Public               bool                 `json:"public"`
-	VisibilityLevel      VisibilityLevelValue `json:"visibility_level"`
-	SSHURLToRepo         string               `json:"ssh_url_to_repo"`
-	HTTPURLToRepo        string               `json:"http_url_to_repo"`
-	WebURL               string               `json:"web_url"`
-	TagList              []string             `json:"tag_list"`
-	Owner                *User                `json:"owner"`
-	Name                 string               `json:"name"`
-	NameWithNamespace    string               `json:"name_with_namespace"`
-	Path                 string               `json:"path"`
-	PathWithNamespace    string               `json:"path_with_namespace"`
-	IssuesEnabled        bool                 `json:"issues_enabled"`
-	OpenIssuesCount      int                  `json:"open_issues_count"`
-	MergeRequestsEnabled bool                 `json:"merge_requests_enabled"`
-	BuildsEnabled        bool                 `json:"builds_enabled"`
-	WikiEnabled          bool                 `json:"wiki_enabled"`
-	SnippetsEnabled      bool                 `json:"snippets_enabled"`
-	CreatedAt            *time.Time           `json:"created_at,omitempty"`
-	LastActivityAt       *time.Time           `json:"last_activity_at,omitempty"`
-	CreatorID            int                  `json:"creator_id"`
-	Namespace            *ProjectNamespace    `json:"namespace"`
-	Permissions          *Permissions         `json:"permissions"`
-	Archived             bool                 `json:"archived"`
-	AvatarURL            string               `json:"avatar_url"`
-	SharedRunnersEnabled bool                 `json:"shared_runners_enabled"`
-	ForksCount           int                  `json:"forks_count"`
-	StarCount            int                  `json:"star_count"`
-	RunnersToken         string               `json:"runners_token"`
-	PublicBuilds         bool                 `json:"public_builds"`
+	ID                                        int                  `json:"id"`
+	Description                               string               `json:"description"`
+	DefaultBranch                             string               `json:"default_branch"`
+	Public                                    bool                 `json:"public"`
+	VisibilityLevel                           VisibilityLevelValue `json:"visibility_level"`
+	SSHURLToRepo                              string               `json:"ssh_url_to_repo"`
+	HTTPURLToRepo                             string               `json:"http_url_to_repo"`
+	WebURL                                    string               `json:"web_url"`
+	TagList                                   []string             `json:"tag_list"`
+	Owner                                     *User                `json:"owner"`
+	Name                                      string               `json:"name"`
+	NameWithNamespace                         string               `json:"name_with_namespace"`
+	Path                                      string               `json:"path"`
+	PathWithNamespace                         string               `json:"path_with_namespace"`
+	IssuesEnabled                             bool                 `json:"issues_enabled"`
+	OpenIssuesCount                           int                  `json:"open_issues_count"`
+	MergeRequestsEnabled                      bool                 `json:"merge_requests_enabled"`
+	ApprovalsBeforeMerge                      int                  `json:"approvals_before_merge"`
+	BuildsEnabled                             bool                 `json:"builds_enabled"`
+	WikiEnabled                               bool                 `json:"wiki_enabled"`
+	SnippetsEnabled                           bool                 `json:"snippets_enabled"`
+	ContainerRegistryEnabled                  bool                 `json:"container_registry_enabled"`
+	CreatedAt                                 *time.Time           `json:"created_at,omitempty"`
+	LastActivityAt                            *time.Time           `json:"last_activity_at,omitempty"`
+	CreatorID                                 int                  `json:"creator_id"`
+	Namespace                                 *ProjectNamespace    `json:"namespace"`
+	Permissions                               *Permissions         `json:"permissions"`
+	Archived                                  bool                 `json:"archived"`
+	AvatarURL                                 string               `json:"avatar_url"`
+	SharedRunnersEnabled                      bool                 `json:"shared_runners_enabled"`
+	ForksCount                                int                  `json:"forks_count"`
+	StarCount                                 int                  `json:"star_count"`
+	RunnersToken                              string               `json:"runners_token"`
+	PublicBuilds                              bool                 `json:"public_builds"`
+	OnlyAllowMergeIfBuildSucceeds             bool                 `json:"only_allow_merge_if_build_succeeds"`
+	OnlyAllowMergeIfAllDiscussionsAreResolved bool                 `json:"only_allow_merge_if_all_discussions_are_resolved"`
+	LFSEnabled                                bool                 `json:"lfs_enabled"`
+	RequestAccessEnabled                      bool                 `json:"request_access_enabled"`
+	SharedWithGroups                          []struct {
+		GroupID          int    `json:"group_id"`
+		GroupName        string `json:"group_name"`
+		GroupAccessLevel int    `json:"group_access_level"`
+	} `json:"shared_with_groups"`
+	Statistics *ProjectStatistics `json:"statistics"`
 }
 
+// Repository represents a repository.
+type Repository struct {
+	Name              string `json:"name"`
+	Description       string `json:"description"`
+	WebURL            string `json:"web_url"`
+	AvatarURL         string `json:"avatar_url"`
+	GitSSHURL         string `json:"git_ssh_url"`
+	GitHTTPURL        string `json:"git_http_url"`
+	Namespace         string `json:"namespace"`
+	VisibilityLevel   int    `json:"visibility_level"`
+	PathWithNamespace string `json:"path_with_namespace"`
+	DefaultBranch     string `json:"default_branch"`
+	Homepage          string `json:"homepage"`
+	URL               string `json:"url"`
+	SSHURL            string `json:"ssh_url"`
+	HTTPURL           string `json:"http_url"`
+}
+
+// ProjectNamespace represents a project namespace.
 type ProjectNamespace struct {
 	CreatedAt   *time.Time `json:"created_at"`
 	Description string     `json:"description"`
@@ -78,16 +109,33 @@ type ProjectNamespace struct {
 	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
+// StorageStatistics represents a statistics record for a group or project.
+type StorageStatistics struct {
+	StorageSize        int64 `json:"storage_size"`
+	RepositorySize     int64 `json:"repository_size"`
+	LfsObjectsSize     int64 `json:"lfs_objects_size"`
+	BuildArtifactsSize int64 `json:"build_artifacts_size"`
+}
+
+// ProjectStatistics represents a statistics record for a project.
+type ProjectStatistics struct {
+	StorageStatistics
+	CommitCount int `json:"commit_count"`
+}
+
+// Permissions represents premissions.
 type Permissions struct {
 	ProjectAccess *ProjectAccess `json:"project_access"`
 	GroupAccess   *GroupAccess   `json:"group_access"`
 }
 
+// ProjectAccess represents project access.
 type ProjectAccess struct {
 	AccessLevel       AccessLevelValue       `json:"access_level"`
 	NotificationLevel NotificationLevelValue `json:"notification_level"`
 }
 
+// GroupAccess represents group access.
 type GroupAccess struct {
 	AccessLevel       AccessLevelValue       `json:"access_level"`
 	NotificationLevel NotificationLevelValue `json:"notification_level"`
@@ -99,21 +147,23 @@ func (s Project) String() string {
 
 // ListProjectsOptions represents the available ListProjects() options.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#list-projects
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#list-projects
 type ListProjectsOptions struct {
 	ListOptions
-	Archived       *bool   `url:"archived,omitempty" json:"archived,omitempty"`
-	OrderBy        *string `url:"order_by,omitempty" json:"order_by,omitempty"`
-	Sort           *string `url:"sort,omitempty" json:"sort,omitempty"`
-	Search         *string `url:"search,omitempty" json:"search,omitempty"`
-	CIEnabledFirst *bool   `url:"ci_enabled_first,omitempty" json:"ci_enabled_first,omitempty"`
+	Archived   *bool   `url:"archived,omitempty" json:"archived,omitempty"`
+	OrderBy    *string `url:"order_by,omitempty" json:"order_by,omitempty"`
+	Sort       *string `url:"sort,omitempty" json:"sort,omitempty"`
+	Search     *string `url:"search,omitempty" json:"search,omitempty"`
+	Simple     *bool   `url:"simple,omitempty" json:"simple,omitempty"`
+	Visibility *string `url:"visibility,omitempty" json:"visibility,omitempty"`
+	Statistics *bool   `url:"statistics,omitempty" json:"statistics,omitempty"`
 }
 
 // ListProjects gets a list of projects accessible by the authenticated user.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#list-projects
-func (s *ProjectsService) ListProjects(opt *ListProjectsOptions) ([]*Project, *Response, error) {
-	req, err := s.client.NewRequest("GET", "projects", opt)
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#list-projects
+func (s *ProjectsService) ListProjects(opt *ListProjectsOptions, options ...OptionFunc) ([]*Project, *Response, error) {
+	req, err := s.client.NewRequest("GET", "projects", opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -131,10 +181,9 @@ func (s *ProjectsService) ListProjects(opt *ListProjectsOptions) ([]*Project, *R
 // authenticated user.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-owned-projects
-func (s *ProjectsService) ListOwnedProjects(
-	opt *ListProjectsOptions) ([]*Project, *Response, error) {
-	req, err := s.client.NewRequest("GET", "projects/owned", opt)
+// https://docs.gitlab.com/ce/api/projects.html#list-owned-projects
+func (s *ProjectsService) ListOwnedProjects(opt *ListProjectsOptions, options ...OptionFunc) ([]*Project, *Response, error) {
+	req, err := s.client.NewRequest("GET", "projects/owned", opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,10 +201,9 @@ func (s *ProjectsService) ListOwnedProjects(
 // authenticated user.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-starred-projects
-func (s *ProjectsService) ListStarredProjects(
-	opt *ListProjectsOptions) ([]*Project, *Response, error) {
-	req, err := s.client.NewRequest("GET", "projects/starred", opt)
+// https://docs.gitlab.com/ce/api/projects.html#list-starred-projects
+func (s *ProjectsService) ListStarredProjects(opt *ListProjectsOptions, options ...OptionFunc) ([]*Project, *Response, error) {
+	req, err := s.client.NewRequest("GET", "projects/starred", opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -172,9 +220,9 @@ func (s *ProjectsService) ListStarredProjects(
 // ListAllProjects gets a list of all GitLab projects (admin only).
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-all-projects
-func (s *ProjectsService) ListAllProjects(opt *ListProjectsOptions) ([]*Project, *Response, error) {
-	req, err := s.client.NewRequest("GET", "projects/all", opt)
+// https://docs.gitlab.com/ce/api/projects.html#list-all-projects
+func (s *ProjectsService) ListAllProjects(opt *ListProjectsOptions, options ...OptionFunc) ([]*Project, *Response, error) {
+	req, err := s.client.NewRequest("GET", "projects/all", opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -192,15 +240,15 @@ func (s *ProjectsService) ListAllProjects(opt *ListProjectsOptions) ([]*Project,
 // NAMESPACE/PROJECT_NAME, which is owned by the authenticated user.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#get-single-project
-func (s *ProjectsService) GetProject(pid interface{}) (*Project, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#get-single-project
+func (s *ProjectsService) GetProject(pid interface{}, options ...OptionFunc) (*Project, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -217,7 +265,7 @@ func (s *ProjectsService) GetProject(pid interface{}) (*Project, *Response, erro
 // SearchProjectsOptions represents the available SearchProjects() options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#search-for-projects-by-name
+// https://docs.gitlab.com/ce/api/projects.html#search-for-projects-by-name
 type SearchProjectsOptions struct {
 	ListOptions
 	OrderBy *string `url:"order_by,omitempty" json:"order_by,omitempty"`
@@ -228,13 +276,11 @@ type SearchProjectsOptions struct {
 // authenticated user.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#search-for-projects-by-name
-func (s *ProjectsService) SearchProjects(
-	query string,
-	opt *SearchProjectsOptions) ([]*Project, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#search-for-projects-by-name
+func (s *ProjectsService) SearchProjects(query string, opt *SearchProjectsOptions, options ...OptionFunc) ([]*Project, *Response, error) {
 	u := fmt.Sprintf("projects/search/%s", query)
 
-	req, err := s.client.NewRequest("GET", u, opt)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -251,7 +297,7 @@ func (s *ProjectsService) SearchProjects(
 // ProjectEvent represents a GitLab project event.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#get-project-events
+// https://docs.gitlab.com/ce/api/projects.html#get-project-events
 type ProjectEvent struct {
 	Title          interface{} `json:"title"`
 	ProjectID      int         `json:"project_id"`
@@ -261,28 +307,14 @@ type ProjectEvent struct {
 	AuthorID       int         `json:"author_id"`
 	AuthorUsername string      `json:"author_username"`
 	Data           struct {
-		Before     string `json:"before"`
-		After      string `json:"after"`
-		Ref        string `json:"ref"`
-		UserID     int    `json:"user_id"`
-		UserName   string `json:"user_name"`
-		Repository struct {
-			Name        string `json:"name"`
-			URL         string `json:"url"`
-			Description string `json:"description"`
-			Homepage    string `json:"homepage"`
-		} `json:"repository"`
-		Commits []struct {
-			ID        string     `json:"id"`
-			Message   string     `json:"message"`
-			Timestamp *time.Time `json:"timestamp"`
-			URL       string     `json:"url"`
-			Author    struct {
-				Name  string `json:"name"`
-				Email string `json:"email"`
-			} `json:"author"`
-		} `json:"commits"`
-		TotalCommitsCount int `json:"total_commits_count"`
+		Before            string      `json:"before"`
+		After             string      `json:"after"`
+		Ref               string      `json:"ref"`
+		UserID            int         `json:"user_id"`
+		UserName          string      `json:"user_name"`
+		Repository        *Repository `json:"repository"`
+		Commits           []*Commit   `json:"commits"`
+		TotalCommitsCount int         `json:"total_commits_count"`
 	} `json:"data"`
 	TargetTitle interface{} `json:"target_title"`
 }
@@ -294,7 +326,7 @@ func (s ProjectEvent) String() string {
 // GetProjectEventsOptions represents the available GetProjectEvents() options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#get-project-events
+// https://docs.gitlab.com/ce/api/projects.html#get-project-events
 type GetProjectEventsOptions struct {
 	ListOptions
 }
@@ -303,17 +335,15 @@ type GetProjectEventsOptions struct {
 // newest to latest.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#get-project-events
-func (s *ProjectsService) GetProjectEvents(
-	pid interface{},
-	opt *GetProjectEventsOptions) ([]*ProjectEvent, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#get-project-events
+func (s *ProjectsService) GetProjectEvents(pid interface{}, opt *GetProjectEventsOptions, options ...OptionFunc) ([]*ProjectEvent, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/events", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, opt)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -329,27 +359,33 @@ func (s *ProjectsService) GetProjectEvents(
 
 // CreateProjectOptions represents the available CreateProjects() options.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#create-project
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#create-project
 type CreateProjectOptions struct {
-	Name                 *string               `url:"name,omitempty" json:"name,omitempty"`
-	Path                 *string               `url:"path,omitempty" json:"path,omitempty"`
-	NamespaceID          *string               `url:"namespace_id,omitempty" json:"namespace_id,omitempty"`
-	Description          *string               `url:"description,omitempty" json:"description,omitempty"`
-	IssuesEnabled        *bool                 `url:"issues_enabled,omitempty" json:"issues_enabled,omitempty"`
-	MergeRequestsEnabled *bool                 `url:"merge_requests_enabled,omitempty" json:"merge_requests_enabled,omitempty"`
-	WikiEnabled          *bool                 `url:"wiki_enabled,omitempty" json:"wiki_enabled,omitempty"`
-	SnippetsEnabled      *bool                 `url:"snippets_enabled,omitempty" json:"snippets_enabled,omitempty"`
-	Public               *bool                 `url:"public,omitempty" json:"public,omitempty"`
-	VisibilityLevel      *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
-	ImportURL            *string               `url:"import_url,omitempty" json:"import_url,omitempty"`
+	Name                          *string               `url:"name,omitempty" json:"name,omitempty"`
+	Path                          *string               `url:"path,omitempty" json:"path,omitempty"`
+	NamespaceID                   *int                  `url:"namespace_id,omitempty" json:"namespace_id,omitempty"`
+	Description                   *string               `url:"description,omitempty" json:"description,omitempty"`
+	IssuesEnabled                 *bool                 `url:"issues_enabled,omitempty" json:"issues_enabled,omitempty"`
+	MergeRequestsEnabled          *bool                 `url:"merge_requests_enabled,omitempty" json:"merge_requests_enabled,omitempty"`
+	BuildsEnabled                 *bool                 `url:"builds_enabled,omitempty" json:"builds_enabled,omitempty"`
+	WikiEnabled                   *bool                 `url:"wiki_enabled,omitempty" json:"wiki_enabled,omitempty"`
+	SnippetsEnabled               *bool                 `url:"snippets_enabled,omitempty" json:"snippets_enabled,omitempty"`
+	ContainerRegistryEnabled      *bool                 `url:"container_registry_enabled,omitempty" json:"container_registry_enabled,omitempty"`
+	SharedRunnersEnabled          *bool                 `url:"shared_runners_enabled,omitempty" json:"shared_runners_enabled,omitempty"`
+	Public                        *bool                 `url:"public,omitempty" json:"public,omitempty"`
+	VisibilityLevel               *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
+	ImportURL                     *string               `url:"import_url,omitempty" json:"import_url,omitempty"`
+	PublicBuilds                  *bool                 `url:"public_builds,omitempty" json:"public_builds,omitempty"`
+	OnlyAllowMergeIfBuildSucceeds *bool                 `url:"only_allow_merge_if_build_succeeds,omitempty" json:"only_allow_merge_if_build_succeeds,omitempty"`
+	LFSEnabled                    *bool                 `url:"lfs_enabled,omitempty" json:"lfs_enabled,omitempty"`
+	RequestAccessEnabled          *bool                 `url:"request_access_enabled,omitempty" json:"request_access_enabled,omitempty"`
 }
 
 // CreateProject creates a new project owned by the authenticated user.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#create-project
-func (s *ProjectsService) CreateProject(
-	opt *CreateProjectOptions) (*Project, *Response, error) {
-	req, err := s.client.NewRequest("POST", "projects", opt)
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#create-project
+func (s *ProjectsService) CreateProject(opt *CreateProjectOptions, options ...OptionFunc) (*Project, *Response, error) {
+	req, err := s.client.NewRequest("POST", "projects", opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -367,7 +403,7 @@ func (s *ProjectsService) CreateProject(
 // options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#create-project-for-user
+// https://docs.gitlab.com/ce/api/projects.html#create-project-for-user
 type CreateProjectForUserOptions struct {
 	Name                 *string               `url:"name,omitempty" json:"name,omitempty"`
 	Description          *string               `url:"description,omitempty" json:"description,omitempty"`
@@ -385,13 +421,11 @@ type CreateProjectForUserOptions struct {
 // Available only for admins.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#create-project-for-user
-func (s *ProjectsService) CreateProjectForUser(
-	user int,
-	opt *CreateProjectForUserOptions) (*Project, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#create-project-for-user
+func (s *ProjectsService) CreateProjectForUser(user int, opt *CreateProjectForUserOptions, options ...OptionFunc) (*Project, *Response, error) {
 	u := fmt.Sprintf("projects/user/%d", user)
 
-	req, err := s.client.NewRequest("POST", u, opt)
+	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -407,33 +441,41 @@ func (s *ProjectsService) CreateProjectForUser(
 
 // EditProjectOptions represents the available EditProject() options.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#edit-project
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#edit-project
 type EditProjectOptions struct {
-	Name                 *string               `url:"name,omitempty" json:"name,omitempty"`
-	Path                 *string               `url:"path,omitempty" json:"path,omitempty"`
-	Description          *string               `url:"description,omitempty" json:"description,omitempty"`
-	DefaultBranch        *string               `url:"default_branch,omitempty" json:"default_branch,omitempty"`
-	IssuesEnabled        *bool                 `url:"issues_enabled,omitempty" json:"issues_enabled,omitempty"`
-	MergeRequestsEnabled *bool                 `url:"merge_requests_enabled,omitempty" json:"merge_requests_enabled,omitempty"`
-	WikiEnabled          *bool                 `url:"wiki_enabled,omitempty" json:"wiki_enabled,omitempty"`
-	SnippetsEnabled      *bool                 `url:"snippets_enabled,omitempty" json:"snippets_enabled,omitempty"`
-	Public               *bool                 `url:"public,omitempty" json:"public,omitempty"`
-	VisibilityLevel      *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
+	Name                                      *string               `url:"name,omitempty" json:"name,omitempty"`
+	Path                                      *string               `url:"path,omitempty" json:"path,omitempty"`
+	Description                               *string               `url:"description,omitempty" json:"description,omitempty"`
+	DefaultBranch                             *string               `url:"default_branch,omitempty" json:"default_branch,omitempty"`
+	IssuesEnabled                             *bool                 `url:"issues_enabled,omitempty" json:"issues_enabled,omitempty"`
+	MergeRequestsEnabled                      *bool                 `url:"merge_requests_enabled,omitempty" json:"merge_requests_enabled,omitempty"`
+	ApprovalsBeforeMerge                      *int                  `url:"approvals_before_merge,omitempty" json:"approvals_before_merge,omitempty"`
+	BuildsEnabled                             *bool                 `url:"builds_enabled,omitempty" json:"builds_enabled,omitempty"`
+	WikiEnabled                               *bool                 `url:"wiki_enabled,omitempty" json:"wiki_enabled,omitempty"`
+	SnippetsEnabled                           *bool                 `url:"snippets_enabled,omitempty" json:"snippets_enabled,omitempty"`
+	ContainerRegistryEnabled                  *bool                 `url:"container_registry_enabled,omitempty" json:"container_registry_enabled,omitempty"`
+	SharedRunnersEnabled                      *bool                 `url:"shared_runners_enabled,omitempty" json:"shared_runners_enabled,omitempty"`
+	Public                                    *bool                 `url:"public,omitempty" json:"public,omitempty"`
+	VisibilityLevel                           *VisibilityLevelValue `url:"visibility_level,omitempty" json:"visibility_level,omitempty"`
+	ImportURL                                 *bool                 `url:"import_url,omitempty" json:"import_url,omitempty"`
+	PublicBuilds                              *bool                 `url:"public_builds,omitempty" json:"public_builds,omitempty"`
+	OnlyAllowMergeIfBuildSucceeds             *bool                 `url:"only_allow_merge_if_build_succeeds,omitempty" json:"only_allow_merge_if_build_succeeds,omitempty"`
+	OnlyAllowMergeIfAllDiscussionsAreResolved *bool                 `url:"only_allow_merge_if_all_discussions_are_resolved,omitempty" json:"only_allow_merge_if_all_discussions_are_resolved,omitempty"`
+	LFSEnabled                                *bool                 `url:"lfs_enabled,omitempty" json:"lfs_enabled,omitempty"`
+	RequestAccessEnabled                      *bool                 `url:"request_access_enabled,omitempty" json:"request_access_enabled,omitempty"`
 }
 
 // EditProject updates an existing project.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#edit-project
-func (s *ProjectsService) EditProject(
-	pid interface{},
-	opt *EditProjectOptions) (*Project, *Response, error) {
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#edit-project
+func (s *ProjectsService) EditProject(pid interface{}, opt *EditProjectOptions, options ...OptionFunc) (*Project, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("PUT", u, opt)
+	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -450,15 +492,15 @@ func (s *ProjectsService) EditProject(
 // ForkProject forks a project into the user namespace of the authenticated
 // user.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#fork-project
-func (s *ProjectsService) ForkProject(pid interface{}) (*Project, *Response, error) {
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#fork-project
+func (s *ProjectsService) ForkProject(pid interface{}, options ...OptionFunc) (*Project, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/fork/%s", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, nil)
+	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -475,15 +517,15 @@ func (s *ProjectsService) ForkProject(pid interface{}) (*Project, *Response, err
 // DeleteProject removes a project including all associated resources
 // (issues, merge requests etc.)
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#remove-project
-func (s *ProjectsService) DeleteProject(pid interface{}) (*Response, error) {
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#remove-project
+func (s *ProjectsService) DeleteProject(pid interface{}, options ...OptionFunc) (*Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, err
 	}
 	u := fmt.Sprintf("projects/%s", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("DELETE", u, nil)
+	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
 		return nil, err
 	}
@@ -494,7 +536,7 @@ func (s *ProjectsService) DeleteProject(pid interface{}) (*Response, error) {
 // ProjectMember represents a project member.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-project-team-members
+// https://docs.gitlab.com/ce/api/projects.html#list-project-team-members
 type ProjectMember struct {
 	ID          int              `json:"id"`
 	Username    string           `json:"username"`
@@ -509,7 +551,7 @@ type ProjectMember struct {
 // options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-project-team-members
+// https://docs.gitlab.com/ce/api/projects.html#list-project-team-members
 type ListProjectMembersOptions struct {
 	ListOptions
 	Query *string `url:"query,omitempty" json:"query,omitempty"`
@@ -518,17 +560,15 @@ type ListProjectMembersOptions struct {
 // ListProjectMembers gets a list of a project's team members.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-project-team-members
-func (s *ProjectsService) ListProjectMembers(
-	pid interface{},
-	opt *ListProjectMembersOptions) ([]*ProjectMember, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#list-project-team-members
+func (s *ProjectsService) ListProjectMembers(pid interface{}, opt *ListProjectMembersOptions, options ...OptionFunc) ([]*ProjectMember, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/members", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, opt)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -545,17 +585,15 @@ func (s *ProjectsService) ListProjectMembers(
 // GetProjectMember gets a project team member.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#get-project-team-member
-func (s *ProjectsService) GetProjectMember(
-	pid interface{},
-	user int) (*ProjectMember, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#get-project-team-member
+func (s *ProjectsService) GetProjectMember(pid interface{}, user int, options ...OptionFunc) (*ProjectMember, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/members/%d", url.QueryEscape(project), user)
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -572,7 +610,7 @@ func (s *ProjectsService) GetProjectMember(
 // AddProjectMemberOptions represents the available AddProjectMember() options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#add-project-team-member
+// https://docs.gitlab.com/ce/api/projects.html#add-project-team-member
 type AddProjectMemberOptions struct {
 	UserID      *int              `url:"user_id,omitempty" json:"user_id,omitempty"`
 	AccessLevel *AccessLevelValue `url:"access_level,omitempty" json:"access_level,omitempty"`
@@ -584,17 +622,15 @@ type AddProjectMemberOptions struct {
 // existing membership.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#add-project-team-member
-func (s *ProjectsService) AddProjectMember(
-	pid interface{},
-	opt *AddProjectMemberOptions) (*ProjectMember, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#add-project-team-member
+func (s *ProjectsService) AddProjectMember(pid interface{}, opt *AddProjectMemberOptions, options ...OptionFunc) (*ProjectMember, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/members", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, opt)
+	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -611,7 +647,7 @@ func (s *ProjectsService) AddProjectMember(
 // EditProjectMemberOptions represents the available EditProjectMember() options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#edit-project-team-member
+// https://docs.gitlab.com/ce/api/projects.html#edit-project-team-member
 type EditProjectMemberOptions struct {
 	AccessLevel *AccessLevelValue `url:"access_level,omitempty" json:"access_level,omitempty"`
 }
@@ -619,18 +655,15 @@ type EditProjectMemberOptions struct {
 // EditProjectMember updates a project team member to a specified access level..
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#edit-project-team-member
-func (s *ProjectsService) EditProjectMember(
-	pid interface{},
-	user int,
-	opt *EditProjectMemberOptions) (*ProjectMember, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#edit-project-team-member
+func (s *ProjectsService) EditProjectMember(pid interface{}, user int, opt *EditProjectMemberOptions, options ...OptionFunc) (*ProjectMember, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/members/%d", url.QueryEscape(project), user)
 
-	req, err := s.client.NewRequest("PUT", u, opt)
+	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -647,15 +680,15 @@ func (s *ProjectsService) EditProjectMember(
 // DeleteProjectMember removes a user from a project team.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#remove-project-team-member
-func (s *ProjectsService) DeleteProjectMember(pid interface{}, user int) (*Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#remove-project-team-member
+func (s *ProjectsService) DeleteProjectMember(pid interface{}, user int, options ...OptionFunc) (*Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, err
 	}
 	u := fmt.Sprintf("projects/%s/members/%d", url.QueryEscape(project), user)
 
-	req, err := s.client.NewRequest("DELETE", u, nil)
+	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
 		return nil, err
 	}
@@ -666,20 +699,26 @@ func (s *ProjectsService) DeleteProjectMember(pid interface{}, user int) (*Respo
 // ProjectHook represents a project hook.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-project-hooks
+// https://docs.gitlab.com/ce/api/projects.html#list-project-hooks
 type ProjectHook struct {
-	ID                  int        `json:"id"`
-	URL                 string     `json:"url"`
-	ProjectID           int        `json:"project_id"`
-	PushEvents          bool       `json:"push_events"`
-	IssuesEvents        bool       `json:"issues_events"`
-	MergeRequestsEvents bool       `json:"merge_requests_events"`
-	CreatedAt           *time.Time `json:"created_at"`
+	ID                    int        `json:"id"`
+	URL                   string     `json:"url"`
+	ProjectID             int        `json:"project_id"`
+	PushEvents            bool       `json:"push_events"`
+	IssuesEvents          bool       `json:"issues_events"`
+	MergeRequestsEvents   bool       `json:"merge_requests_events"`
+	TagPushEvents         bool       `json:"tag_push_events"`
+	NoteEvents            bool       `json:"note_events"`
+	BuildEvents           bool       `json:"build_events"`
+	PipelineEvents        bool       `json:"pipeline_events"`
+	WikiPageEvents        bool       `json:"wiki_page_events"`
+	EnableSSLVerification bool       `json:"enable_ssl_verification"`
+	CreatedAt             *time.Time `json:"created_at"`
 }
 
 // ListProjectHooksOptions represents the available ListProjectHooks() options.
 //
-// GitLab API docs: http://doc.gitlab.com/ce/api/projects.html#list-project-hooks
+// GitLab API docs: https://docs.gitlab.com/ce/api/projects.html#list-project-hooks
 type ListProjectHooksOptions struct {
 	ListOptions
 }
@@ -687,17 +726,15 @@ type ListProjectHooksOptions struct {
 // ListProjectHooks gets a list of project hooks.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#list-project-hooks
-func (s *ProjectsService) ListProjectHooks(
-	pid interface{},
-	opt *ListProjectHooksOptions) ([]*ProjectHook, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#list-project-hooks
+func (s *ProjectsService) ListProjectHooks(pid interface{}, opt *ListProjectHooksOptions, options ...OptionFunc) ([]*ProjectHook, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/hooks", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("GET", u, opt)
+	req, err := s.client.NewRequest("GET", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -714,17 +751,15 @@ func (s *ProjectsService) ListProjectHooks(
 // GetProjectHook gets a specific hook for a project.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#get-project-hook
-func (s *ProjectsService) GetProjectHook(
-	pid interface{},
-	hook int) (*ProjectHook, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#get-project-hook
+func (s *ProjectsService) GetProjectHook(pid interface{}, hook int, options ...OptionFunc) (*ProjectHook, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/hooks/%d", url.QueryEscape(project), hook)
 
-	req, err := s.client.NewRequest("GET", u, nil)
+	req, err := s.client.NewRequest("GET", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -741,29 +776,33 @@ func (s *ProjectsService) GetProjectHook(
 // AddProjectHookOptions represents the available AddProjectHook() options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#add-project-hook
+// https://docs.gitlab.com/ce/api/projects.html#add-project-hook
 type AddProjectHookOptions struct {
-	URL                 *string `url:"url,omitempty" json:"url,omitempty"`
-	PushEvents          *bool   `url:"push_events,omitempty" json:"push_events,omitempty"`
-	IssuesEvents        *bool   `url:"issues_events,omitempty" json:"issues_events,omitempty"`
-	MergeRequestsEvents *bool   `url:"merge_requests_events,omitempty" json:"merge_requests_events,omitempty"`
-	TagPushEvents       *bool   `url:"tag_push_events,omitempty" json:"tag_push_events,omitempty"`
+	URL                   *string `url:"url,omitempty" json:"url,omitempty"`
+	PushEvents            *bool   `url:"push_events,omitempty" json:"push_events,omitempty"`
+	IssuesEvents          *bool   `url:"issues_events,omitempty" json:"issues_events,omitempty"`
+	MergeRequestsEvents   *bool   `url:"merge_requests_events,omitempty" json:"merge_requests_events,omitempty"`
+	TagPushEvents         *bool   `url:"tag_push_events,omitempty" json:"tag_push_events,omitempty"`
+	NoteEvents            *bool   `url:"note_events,omitempty" json:"note_events,omitempty"`
+	BuildEvents           *bool   `url:"build_events,omitempty" json:"build_events,omitempty"`
+	PipelineEvents        *bool   `url:"pipeline_events,omitempty" json:"pipeline_events,omitempty"`
+	WikiPageEvents        *bool   `url:"wiki_page_events,omitempty" json:"wiki_page_events,omitempty"`
+	EnableSSLVerification *bool   `url:"enable_ssl_verification,omitempty" json:"enable_ssl_verification,omitempty"`
+	Token                 *string `url:"token,omitempty" json:"token,omitempty"`
 }
 
 // AddProjectHook adds a hook to a specified project.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#add-project-hook
-func (s *ProjectsService) AddProjectHook(
-	pid interface{},
-	opt *AddProjectHookOptions) (*ProjectHook, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#add-project-hook
+func (s *ProjectsService) AddProjectHook(pid interface{}, opt *AddProjectHookOptions, options ...OptionFunc) (*ProjectHook, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/hooks", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, opt)
+	req, err := s.client.NewRequest("POST", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -780,30 +819,33 @@ func (s *ProjectsService) AddProjectHook(
 // EditProjectHookOptions represents the available EditProjectHook() options.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#edit-project-hook
+// https://docs.gitlab.com/ce/api/projects.html#edit-project-hook
 type EditProjectHookOptions struct {
-	URL                 *string `url:"url,omitempty" json:"url,omitempty"`
-	PushEvents          *bool   `url:"push_events,omitempty" json:"push_events,omitempty"`
-	IssuesEvents        *bool   `url:"issues_events,omitempty" json:"issues_events,omitempty"`
-	MergeRequestsEvents *bool   `url:"merge_requests_events,omitempty" json:"merge_requests_events,omitempty"`
-	TagPushEvents       *bool   `url:"tag_push_events,omitempty" json:"tag_push_events,omitempty"`
+	URL                   *string `url:"url,omitempty" json:"url,omitempty"`
+	PushEvents            *bool   `url:"push_events,omitempty" json:"push_events,omitempty"`
+	IssuesEvents          *bool   `url:"issues_events,omitempty" json:"issues_events,omitempty"`
+	MergeRequestsEvents   *bool   `url:"merge_requests_events,omitempty" json:"merge_requests_events,omitempty"`
+	TagPushEvents         *bool   `url:"tag_push_events,omitempty" json:"tag_push_events,omitempty"`
+	NoteEvents            *bool   `url:"note_events,omitempty" json:"note_events,omitempty"`
+	BuildEvents           *bool   `url:"build_events,omitempty" json:"build_events,omitempty"`
+	PipelineEvents        *bool   `url:"pipeline_events,omitempty" json:"pipeline_events,omitempty"`
+	WikiPageEvents        *bool   `url:"wiki_page_events,omitempty" json:"wiki_page_events,omitempty"`
+	EnableSSLVerification *bool   `url:"enable_ssl_verification,omitempty" json:"enable_ssl_verification,omitempty"`
+	Token                 *string `url:"token,omitempty" json:"token,omitempty"`
 }
 
 // EditProjectHook edits a hook for a specified project.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#edit-project-hook
-func (s *ProjectsService) EditProjectHook(
-	pid interface{},
-	hook int,
-	opt *EditProjectHookOptions) (*ProjectHook, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#edit-project-hook
+func (s *ProjectsService) EditProjectHook(pid interface{}, hook int, opt *EditProjectHookOptions, options ...OptionFunc) (*ProjectHook, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/hooks/%d", url.QueryEscape(project), hook)
 
-	req, err := s.client.NewRequest("PUT", u, opt)
+	req, err := s.client.NewRequest("PUT", u, opt, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -821,15 +863,15 @@ func (s *ProjectsService) EditProjectHook(
 // method and can be called multiple times. Either the hook is available or not.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#delete-project-hook
-func (s *ProjectsService) DeleteProjectHook(pid interface{}, hook int) (*Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#delete-project-hook
+func (s *ProjectsService) DeleteProjectHook(pid interface{}, hook int, options ...OptionFunc) (*Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, err
 	}
 	u := fmt.Sprintf("projects/%s/hooks/%d", url.QueryEscape(project), hook)
 
-	req, err := s.client.NewRequest("DELETE", u, nil)
+	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
 		return nil, err
 	}
@@ -840,7 +882,7 @@ func (s *ProjectsService) DeleteProjectHook(pid interface{}, hook int) (*Respons
 // ProjectForkRelation represents a project fork relationship.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#admin-fork-relation
+// https://docs.gitlab.com/ce/api/projects.html#admin-fork-relation
 type ProjectForkRelation struct {
 	ID                  int        `json:"id"`
 	ForkedToProjectID   int        `json:"forked_to_project_id"`
@@ -853,13 +895,11 @@ type ProjectForkRelation struct {
 // existing projects.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#create-a-forked-fromto-relation-between-existing-projects.
-func (s *ProjectsService) CreateProjectForkRelation(
-	pid int,
-	fork int) (*ProjectForkRelation, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#create-a-forked-fromto-relation-between-existing-projects.
+func (s *ProjectsService) CreateProjectForkRelation(pid int, fork int, options ...OptionFunc) (*ProjectForkRelation, *Response, error) {
 	u := fmt.Sprintf("projects/%d/fork/%d", pid, fork)
 
-	req, err := s.client.NewRequest("POST", u, nil)
+	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -876,11 +916,11 @@ func (s *ProjectsService) CreateProjectForkRelation(
 // DeleteProjectForkRelation deletes an existing forked from relationship.
 //
 // GitLab API docs:
-// http://doc.gitlab.com/ce/api/projects.html#delete-an-existing-forked-from-relationship
-func (s *ProjectsService) DeleteProjectForkRelation(pid int) (*Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#delete-an-existing-forked-from-relationship
+func (s *ProjectsService) DeleteProjectForkRelation(pid int, options ...OptionFunc) (*Response, error) {
 	u := fmt.Sprintf("projects/%d/fork", pid)
 
-	req, err := s.client.NewRequest("DELETE", u, nil)
+	req, err := s.client.NewRequest("DELETE", u, nil, options)
 	if err != nil {
 		return nil, err
 	}
@@ -888,19 +928,19 @@ func (s *ProjectsService) DeleteProjectForkRelation(pid int) (*Response, error) 
 	return s.client.Do(req, nil)
 }
 
-// Archives the project if the user is either admin or the project owner
-// of this project.
+// ArchiveProject archives the project if the user is either admin or the
+// project owner of this project.
 //
 // GitLab API docs:
-// http://docs.gitlab.com/ce/api/projects.html#archive-a-project
-func (s *ProjectsService) ArchiveProject(pid interface{}) (*Project, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#archive-a-project
+func (s *ProjectsService) ArchiveProject(pid interface{}, options ...OptionFunc) (*Project, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/archive", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, nil)
+	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -914,19 +954,19 @@ func (s *ProjectsService) ArchiveProject(pid interface{}) (*Project, *Response, 
 	return p, resp, err
 }
 
-// Unarchives the project if the user is either admin or the project owner
-// of this project.
+// UnarchiveProject unarchives the project if the user is either admin or
+// the project owner of this project.
 //
 // GitLab API docs:
-// http://docs.gitlab.com/ce/api/projects.html#unarchive-a-project
-func (s *ProjectsService) UnarchiveProject(pid interface{}) (*Project, *Response, error) {
+// https://docs.gitlab.com/ce/api/projects.html#unarchive-a-project
+func (s *ProjectsService) UnarchiveProject(pid interface{}, options ...OptionFunc) (*Project, *Response, error) {
 	project, err := parseID(pid)
 	if err != nil {
 		return nil, nil, err
 	}
 	u := fmt.Sprintf("projects/%s/unarchive", url.QueryEscape(project))
 
-	req, err := s.client.NewRequest("POST", u, nil)
+	req, err := s.client.NewRequest("POST", u, nil, options)
 	if err != nil {
 		return nil, nil, err
 	}

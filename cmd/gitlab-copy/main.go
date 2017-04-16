@@ -149,7 +149,7 @@ Options:
 			}
 		}
 
-		fmt.Printf("\nNow use the -y flag if that looks good to you to start the issues migration.\n")
+		fmt.Printf("\nNow use the -y flag if that looks good to start the issues migration/label copy.\n")
 		os.Exit(0)
 	}
 
