@@ -67,7 +67,7 @@ func (p *projectStats) computeStats(client *gitlab.Client) error {
 				case "closed":
 					p.nbClosed++
 				}
-				if issue.Milestone.Title != "" {
+				if issue.Milestone!=nil && issue.Milestone.Title != "" {
 					p.milestones[issue.Milestone.Title]++
 				}
 			}
