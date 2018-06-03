@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-yaml"
+	"github.com/go-yaml/yaml"
 	"github.com/xanzy/go-gitlab"
 )
 
