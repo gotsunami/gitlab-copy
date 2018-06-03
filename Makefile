@@ -11,6 +11,7 @@ GC_DARWIN_AMD64=${GC_VERSION}-darwin-amd64
 GC_FREEBSD_AMD64=${GC_VERSION}-freebsd-amd64
 GC_LINUX_AMD64=${GC_VERSION}-linux-amd64
 GC_WINDOWS_AMD64=${GC_VERSION}-windows-amd64
+WINDOWS_BIN=${BIN}.exe
 #
 GB_BUILD64=GOARCH=amd64 go build
 MAIN_CMD=github.com/gotsunami/${BIN}/cmd/${BIN}
@@ -43,8 +44,8 @@ darwin:
 		(cd ${DISTDIR} && zip -r ${GC_DARWIN_AMD64}.zip ${BIN})
 
 windows:
-	@cp bin/${GC_VERSION}-windows* ${GCDIR}/${BIN} && \
-		(cd ${DISTDIR} && zip -r ${GC_WINDOWS_AMD64}.zip ${BIN})
+	@cp bin/${GC_VERSION}-windows* ${GCDIR}/${WINDOWS_BIN} && \
+		(cd ${DISTDIR} && rm ${BIN}/${BIN} && zip -r ${GC_WINDOWS_AMD64}.zip ${BIN})
 
 freebsd:
 	@cp bin/${GC_VERSION}-freebsd* ${GCDIR}/${BIN} && \
