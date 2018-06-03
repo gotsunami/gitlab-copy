@@ -1,4 +1,6 @@
 v 0.7
+  - Use GitLab API v4. #29
+  - Use dep to vendor dependencies. #31
   - dist: Windows binary is missing .exe suffix. #28
   - Fixed segfault when from project has no milestones. #27
   - Update go-gitlab library to v0.5.1. #21

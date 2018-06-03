@@ -67,7 +67,7 @@ func (p *projectStats) computeStats(client *gitlab.Client) error {
 				case "closed":
 					p.nbClosed++
 				}
-				if issue.Milestone!=nil && issue.Milestone.Title != "" {
+				if issue.Milestone != nil && issue.Milestone.Title != "" {
 					p.milestones[issue.Milestone.Title]++
 				}
 			}
@@ -82,7 +82,7 @@ func (p *projectStats) computeStats(client *gitlab.Client) error {
 		return err
 	}
 
-	labels, _, err := client.Labels.ListLabels(p.project.ID)
+	labels, _, err := client.Labels.ListLabels(p.project.ID, nil)
 	if err != nil {
 		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
 	}
