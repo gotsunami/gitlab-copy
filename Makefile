@@ -2,6 +2,7 @@
 .PHONY: build dist linux darwin windows buildall version cleardist clean
 
 BIN=gitlab-copy
+WINDOWS_BIN=${BIN}.exe
 DISTDIR=dist
 GCDIR=${DISTDIR}/${BIN}
 #
@@ -43,8 +44,8 @@ darwin:
 		(cd ${DISTDIR} && zip -r ${GC_DARWIN_AMD64}.zip ${BIN})
 
 windows:
-	@cp bin/${GC_VERSION}-windows* ${GCDIR}/${BIN} && \
-		(cd ${DISTDIR} && zip -r ${GC_WINDOWS_AMD64}.zip ${BIN})
+	@cp bin/${GC_VERSION}-windows* ${GCDIR}/${WINDOWS_BIN} && \
+		(cd ${DISTDIR} && rm ${BIN}/${BIN} && zip -r ${GC_WINDOWS_AMD64}.zip ${BIN})
 
 freebsd:
 	@cp bin/${GC_VERSION}-freebsd* ${GCDIR}/${BIN} && \

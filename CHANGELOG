@@ -1,6 +1,8 @@
-v 0.6.8
+v 0.7
+  - dist: Windows binary is missing .exe suffix. #28
+  - Fixed segfault when from project has no milestones. #27
   - Update go-gitlab library to v0.5.1. #21
-  - Built with Go 1.8.1
+  - Built with Go 1.10.2
 
 v 0.6.7
   - Copy labels description too. #16
