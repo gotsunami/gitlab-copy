@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	apiPath = "/api/v3"
+	apiPath = "/api/v4"
 )
 
 type issueRange struct {

@@ -127,7 +127,7 @@ func (m *migration) migrateIssue(issueID int) error {
 		if err == nil {
 			for _, u := range users {
 				if u.Username == issue.Assignee.Username {
-					iopts.AssigneeID = &u.ID
+					iopts.AssigneeIDs = []int{u.ID}
 					break
 				}
 			}
@@ -152,7 +152,7 @@ func (m *migration) migrateIssue(issueID int) error {
 				cmopts := &gitlab.CreateMilestoneOptions{
 					Title:       &issue.Milestone.Title,
 					Description: &issue.Milestone.Description,
-					DueDate:     &issue.Milestone.DueDate,
+					DueDate:     issue.Milestone.DueDate,
 				}
 				mi, _, err := target.Milestones.CreateMilestone(tarProjectID, cmopts)
 				if err == nil {
@@ -296,7 +296,7 @@ func (m *migration) migrate() error {
 	s := make([]issueId, 0)
 
 	// Copy all source labels on target
-	labels, _, err := source.Labels.ListLabels(srcProjectID)
+	labels, _, err := source.Labels.ListLabels(srcProjectID, nil)
 	if err != nil {
 		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
 	}
@@ -327,7 +327,7 @@ func (m *migration) migrate() error {
 			cmopts := &gitlab.CreateMilestoneOptions{
 				Title:       &mi.Title,
 				Description: &mi.Description,
-				DueDate:     &mi.DueDate,
+				DueDate:     mi.DueDate,
 			}
 			tmi, _, err := target.Milestones.CreateMilestone(tarProjectID, cmopts)
 			if err != nil {
