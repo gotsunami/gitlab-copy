@@ -2,6 +2,7 @@
 .PHONY: build dist linux darwin windows buildall version cleardist clean
 
 BIN=gitlab-copy
+WINDOWS_BIN=${BIN}.exe
 DISTDIR=dist
 GCDIR=${DISTDIR}/${BIN}
 #
@@ -11,7 +12,6 @@ GC_DARWIN_AMD64=${GC_VERSION}-darwin-amd64
 GC_FREEBSD_AMD64=${GC_VERSION}-freebsd-amd64
 GC_LINUX_AMD64=${GC_VERSION}-linux-amd64
 GC_WINDOWS_AMD64=${GC_VERSION}-windows-amd64
-WINDOWS_BIN=${BIN}.exe
 #
 GB_BUILD64=GOARCH=amd64 go build
 MAIN_CMD=github.com/gotsunami/${BIN}/cmd/${BIN}
