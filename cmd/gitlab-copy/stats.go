@@ -105,7 +105,7 @@ func (p *projectStats) computeIssueNotes(client *gitlab.Client) error {
 		}
 		if len(issues) > 0 {
 			for _, issue := range issues {
-				notes, _, err := client.Notes.ListIssueNotes(p.project.ID, issue.ID, nil)
+				notes, _, err := client.Notes.ListIssueNotes(p.project.ID, issue.IID, nil)
 				if err != nil {
 					return false, err
 				}
