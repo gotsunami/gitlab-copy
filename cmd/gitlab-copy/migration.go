@@ -183,9 +183,9 @@ func (m *migration) migrateIssue(issueID int) error {
 	}
 
 	// Copy related notes (comments)
-	notes, _, err := source.Notes.ListIssueNotes(srcProjectID, issue.ID, nil)
+	notes, _, err := source.Notes.ListIssueNotes(srcProjectID, issue.IID, nil)
 	if err != nil {
-		return fmt.Errorf("source: can't get issue #%d notes: %s", issue.ID, err.Error())
+		return fmt.Errorf("source: can't get issue #%d notes: %s", issue.IID, err.Error())
 	}
 	opts := &gitlab.CreateIssueNoteOptions{}
 	for j := len(notes) - 1; j >= 0; j-- {
@@ -201,7 +201,7 @@ func (m *migration) migrateIssue(issueID int) error {
 			bd := fmt.Sprintf("%s\n\n%s", head, n.Body)
 			opts.Body = &bd
 		}
-		_, resp, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
+		_, resp, err := target.Notes.CreateIssueNote(tarProjectID, ni.IID, opts)
 		if err != nil {
 			if resp.StatusCode == http.StatusRequestURITooLong {
 				fmt.Printf("target: note's body too long, shortening it ...\n")
@@ -372,7 +372,7 @@ func (m *migration) migrate() error {
 
 	for _, issue := range s {
 		if m.params.From.matches(issue.IID) {
-			if err := m.migrateIssue(issue.ID); err != nil {
+			if err := m.migrateIssue(issue.IID); err != nil {
 				log.Printf(err.Error())
 			}
 			if m.params.From.MoveIssues {
