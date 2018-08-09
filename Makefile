@@ -30,7 +30,7 @@ coverage:
 htmlcoverage:
 	@./tools/coverage.sh --html `pwd`
 
-dist: cleardist buildall zip
+dist: cleardist buildall zip sourcearchive 
 
 zip: linux darwin freebsd windows
 	@rm -rf ${GCDIR}
@@ -56,6 +56,13 @@ buildall: version
 	@GOOS=freebsd ${GB_BUILD64} -v -o bin/${GC_FREEBSD_AMD64} ${MAIN_CMD}
 	@GOOS=linux ${GB_BUILD64} -v -o bin/${GC_LINUX_AMD64} ${MAIN_CMD}
 	@GOOS=windows ${GB_BUILD64} -v -o bin/${GC_WINDOWS_AMD64} ${MAIN_CMD}
+
+sourcearchive: version
+	@git archive --format=zip -o ${DISTDIR}/${VERSION}.zip ${VERSION}
+	@echo ${DISTDIR}/${VERSION}.zip
+	@git archive -o ${DISTDIR}/${VERSION}.tar ${VERSION}
+	@gzip ${DISTDIR}/${VERSION}.tar
+	@echo ${DISTDIR}/${VERSION}.tar.gz
 
 version:
 	@mkdir -p ${GCDIR}
