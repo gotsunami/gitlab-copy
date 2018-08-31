@@ -135,7 +135,7 @@ func (m *migration) migrateIssue(issueID int) error {
 			return fmt.Errorf("target: error fetching users: %s", err.Error())
 		}
 	}
-	if issue.Milestone.Title != "" {
+	if issue.Milestone != nil && issue.Milestone.Title != "" {
 		miles, _, err := target.Milestones.ListMilestones(tarProjectID, nil)
 		if err == nil {
 			found := false
