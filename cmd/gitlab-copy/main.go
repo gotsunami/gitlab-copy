@@ -7,6 +7,9 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/gotsunami/gitlab-copy/config"
+	"github.com/gotsunami/gitlab-copy/migration"
 )
 
 func map2Human(m map[string]int) string {
@@ -63,7 +66,7 @@ Options:
 		fmt.Fprint(os.Stderr, "Config file is missing.\n\n")
 		flag.Usage()
 	}
-	c, err := parseConfig(flag.Arg(0))
+	c, err := config.Parse(flag.Arg(0))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,11 +75,11 @@ Options:
 		fmt.Println("DUMMY MODE: won't apply anything (stats only)\n--")
 	}
 
-	m, err := NewMigration(c)
+	m, err := migration.New(c)
 	if err != nil {
 		log.Fatal(err)
 	}
-	srcproj, err := m.sourceProject(c.From.Name)
+	srcproj, err := m.SourceProject(c.From.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,7 +88,7 @@ Options:
 	}
 	fmt.Printf("source: %s at %s\n", c.From.Name, c.From.ServerURL)
 
-	dstproj, err := m.destProject(c.To.Name)
+	dstproj, err := m.DestProject(c.To.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,7 +103,7 @@ Options:
 
 	pstats := newProjectStats(srcproj)
 
-	if err := pstats.computeStats(m.endpoint.from); err != nil {
+	if err := pstats.computeStats(m.Endpoint.From); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("OK")
@@ -114,7 +117,7 @@ Options:
 
 	if !c.From.LabelsOnly {
 		fmt.Printf("source: counting notes (comments), can take a while ... ")
-		if err := pstats.computeIssueNotes(m.endpoint.from); err != nil {
+		if err := pstats.computeIssueNotes(m.Endpoint.From); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")
@@ -153,7 +156,7 @@ Options:
 		os.Exit(0)
 	}
 
-	if err := m.migrate(); err != nil {
+	if err := m.Migrate(); err != nil {
 		log.Fatal(err)
 	}
 }

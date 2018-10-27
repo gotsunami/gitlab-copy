@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gotsunami/gitlab-copy/migration"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -31,7 +32,7 @@ func (p *projectStats) pagination(client *gitlab.Client, f func(*gitlab.Client, 
 	}
 
 	curPage := 1
-	opts := &gitlab.ListOptions{PerPage: resultsPerPage, Page: curPage}
+	opts := &gitlab.ListOptions{PerPage: migration.ResultsPerPage, Page: curPage}
 
 	for {
 		stop, err := f(client, opts)
