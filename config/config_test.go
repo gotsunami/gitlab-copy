@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 
 func TestParseConfig(t *testing.T) {
 	require := require.New(t)
-	_, err := parseConfig("wrongfile")
+	_, err := Parse("wrongfile")
 	require.NotNil(err)
 }
 
@@ -67,7 +67,7 @@ func TestMatches(t *testing.T) {
 	}
 	for _, r := range set {
 		p.issues = r.ranges
-		if m := p.matches(r.val); m != r.match {
+		if m := p.Matches(r.val); m != r.match {
 			t.Errorf("expected: %v, got a match: %v", r.match, m)
 		}
 	}

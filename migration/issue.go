@@ -37,17 +37,17 @@ func New(c *config.Config) (*Migration, error) {
 	m := &Migration{params: c}
 	m.toUsers = make(map[string]*gitlab.Client)
 
-	fromgl := gitlab.NewClient(nil, c.From.Token)
-	if err := fromgl.SetBaseURL(c.From.ServerURL); err != nil {
+	fromgl := gitlab.NewClient(nil, c.SrcPrj.Token)
+	if err := fromgl.SetBaseURL(c.SrcPrj.ServerURL); err != nil {
 		return nil, err
 	}
-	togl := gitlab.NewClient(nil, c.To.Token)
-	if err := togl.SetBaseURL(c.To.ServerURL); err != nil {
+	togl := gitlab.NewClient(nil, c.DstPrj.Token)
+	if err := togl.SetBaseURL(c.DstPrj.ServerURL); err != nil {
 		return nil, err
 	}
-	for user, token := range c.To.Users {
+	for user, token := range c.DstPrj.Users {
 		uc := gitlab.NewClient(nil, token)
-		if err := uc.SetBaseURL(c.To.ServerURL); err != nil {
+		if err := uc.SetBaseURL(c.DstPrj.ServerURL); err != nil {
 			return nil, err
 		}
 		m.toUsers[user] = uc
@@ -81,7 +81,7 @@ func (m *Migration) SourceProject(name string) (*gitlab.Project, error) {
 }
 
 func (m *Migration) DestProject(name string) (*gitlab.Project, error) {
-	p, err := m.project(m.Endpoint.To, name, "target")
+	p, err := m.project(m.Endpoint.From, name, "target")
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		}
 	}
 	// Add a link to target issue if needed
-	if m.params.From.LinkToTargetIssue {
+	if m.params.SrcPrj.LinkToTargetIssue {
 		var dstProjectURL string
 		// Strip URL if moving on the same GitLab  installation.
 		if m.Endpoint.From.BaseURL().Host == m.Endpoint.To.BaseURL().Host {
@@ -235,7 +235,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		} else {
 			dstProjectURL = m.dstProject.WebURL
 		}
-		tmpl, err := template.New("link").Parse(m.params.From.LinkToTargetIssueText)
+		tmpl, err := template.New("link").Parse(m.params.SrcPrj.LinkToTargetIssueText)
 		if err != nil {
 			return fmt.Errorf("link to target issue: error parsing linkToTargetIssueText parameter: %s", err.Error())
 		}
@@ -255,7 +255,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		}
 	}
 	// Auto close source issue if needed
-	if m.params.From.AutoCloseIssues {
+	if m.params.SrcPrj.AutoCloseIssues {
 		event := "close"
 		_, _, err := source.Issues.UpdateIssue(srcProjectID, issue.ID, &gitlab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
 		if err != nil {
@@ -284,8 +284,8 @@ func (m *Migration) Migrate() error {
 	}
 	fmt.Println("Copying labels ...")
 
-	source := m.Endpoint.From
-	target := m.Endpoint.To
+	source := m.Endpoint.To
+	target := m.Endpoint.From
 
 	srcProjectID := m.srcProject.ID
 	tarProjectID := m.dstProject.ID
@@ -312,12 +312,12 @@ func (m *Migration) Migrate() error {
 		}
 	}
 
-	if m.params.From.LabelsOnly {
+	if m.params.SrcPrj.LabelsOnly {
 		// We're done here
 		return nil
 	}
 
-	if m.params.From.MilestonesOnly {
+	if m.params.SrcPrj.MilestonesOnly {
 		fmt.Println("Copying milestones ...")
 		miles, _, err := source.Milestones.ListMilestones(srcProjectID, nil)
 		if err != nil {
@@ -372,11 +372,11 @@ func (m *Migration) Migrate() error {
 	sort.Sort(byIID(s))
 
 	for _, issue := range s {
-		if m.params.From.Matches(issue.IID) {
+		if m.params.SrcPrj.Matches(issue.IID) {
 			if err := m.migrateIssue(issue.IID); err != nil {
 				log.Printf(err.Error())
 			}
-			if m.params.From.MoveIssues {
+			if m.params.SrcPrj.MoveIssues {
 				// Delete issue from source project
 				_, err := source.Issues.DeleteIssue(srcProjectID, issue.ID)
 				if err != nil {

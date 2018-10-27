@@ -79,23 +79,23 @@ Options:
 	if err != nil {
 		log.Fatal(err)
 	}
-	srcproj, err := m.SourceProject(c.From.Name)
+	srcproj, err := m.SourceProject(c.SrcPrj.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if srcproj == nil {
-		log.Fatalf("source project not found on %s", c.From.ServerURL)
+		log.Fatalf("source project not found on %s", c.SrcPrj.ServerURL)
 	}
-	fmt.Printf("source: %s at %s\n", c.From.Name, c.From.ServerURL)
+	fmt.Printf("source: %s at %s\n", c.SrcPrj.Name, c.SrcPrj.ServerURL)
 
-	dstproj, err := m.DestProject(c.To.Name)
+	dstproj, err := m.DestProject(c.DstPrj.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if dstproj == nil {
-		log.Fatalf("target project not found on %s", c.To.ServerURL)
+		log.Fatalf("target project not found on %s", c.DstPrj.ServerURL)
 	}
-	fmt.Printf("target: %s at %s\n", c.To.Name, c.To.ServerURL)
+	fmt.Printf("target: %s at %s\n", c.DstPrj.Name, c.DstPrj.ServerURL)
 	fmt.Println("--")
 
 	// Find out how many issues we have
@@ -115,7 +115,7 @@ Options:
 		fmt.Printf("source: %d label(s): %s\n", len(pstats.labels), map2Human(pstats.labels))
 	}
 
-	if !c.From.LabelsOnly {
+	if !c.SrcPrj.LabelsOnly {
 		fmt.Printf("source: counting notes (comments), can take a while ... ")
 		if err := pstats.computeIssueNotes(m.Endpoint.From); err != nil {
 			log.Fatal(err)
@@ -124,14 +124,14 @@ Options:
 	}
 	fmt.Println("--")
 	if !*apply {
-		if c.From.LabelsOnly {
+		if c.SrcPrj.LabelsOnly {
 			fmt.Println("Will copy labels only.")
 		} else {
-			if c.From.MilestonesOnly {
+			if c.SrcPrj.MilestonesOnly {
 				fmt.Println("Will copy milestones only.")
 			} else {
 				action := "Copy"
-				if c.From.MoveIssues {
+				if c.SrcPrj.MoveIssues {
 					action = "Move"
 				}
 				fmt.Printf(`Those actions will be performed:
@@ -142,12 +142,12 @@ Options:
 - Set issue's assignee (if user exists) and milestone, if any
 - Copy notes (attached to issues)
 `, action)
-				if c.From.AutoCloseIssues {
+				if c.SrcPrj.AutoCloseIssues {
 					fmt.Println("- Auto-close source issues")
 				}
-				if c.From.LinkToTargetIssue {
+				if c.SrcPrj.LinkToTargetIssue {
 					fmt.Println("- Add a note with a link to new issue")
-					fmt.Println("- Use the link text template: " + c.From.LinkToTargetIssueText)
+					fmt.Println("- Use the link text template: " + c.SrcPrj.LinkToTargetIssueText)
 				}
 			}
 		}

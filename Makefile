@@ -22,7 +22,7 @@ build: version
 	@go build -v -o bin/${BIN} ${MAIN_CMD}
 
 test: version
-	@go test ${MAIN_CMD}
+	@go test ./...
 
 coverage:
 	@./tools/coverage.sh `pwd`
