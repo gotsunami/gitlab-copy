@@ -10,6 +10,7 @@ import (
 
 	"github.com/gotsunami/gitlab-copy/config"
 	"github.com/gotsunami/gitlab-copy/migration"
+	"github.com/gotsunami/gitlab-copy/stats"
 )
 
 func map2Human(m map[string]int) string {
@@ -101,26 +102,26 @@ Options:
 	// Find out how many issues we have
 	fmt.Printf("source: finding issues ... ")
 
-	pstats := newProjectStats(srcproj)
+	pstats := stats.NewProject(srcproj)
 
-	if err := pstats.computeStats(m.Endpoint.SrcClient); err != nil {
+	if err := pstats.ComputeStats(m.Endpoint.SrcClient); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("OK")
 	fmt.Printf("source: %v\n", pstats)
-	if len(pstats.milestones) > 0 {
-		fmt.Printf("source: %d milestone(s): %s\n", len(pstats.milestones), map2Human(pstats.milestones))
+	if len(pstats.Milestones) > 0 {
+		fmt.Printf("source: %d milestone(s): %s\n", len(pstats.Milestones), map2Human(pstats.Milestones))
 	}
-	if len(pstats.labels) > 0 {
-		fmt.Printf("source: %d label(s): %s\n", len(pstats.labels), map2Human(pstats.labels))
+	if len(pstats.Labels) > 0 {
+		fmt.Printf("source: %d label(s): %s\n", len(pstats.Labels), map2Human(pstats.Labels))
 	}
 
 	if !c.SrcPrj.LabelsOnly {
 		fmt.Printf("source: counting notes (comments), can take a while ... ")
-		if err := pstats.computeIssueNotes(m.Endpoint.SrcClient); err != nil {
+		if err := pstats.ComputeIssueNotes(m.Endpoint.SrcClient); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")
+		fmt.Printf("\rsource: %d notes%50s\n", pstats.NbNotes, " ")
 	}
 	fmt.Println("--")
 	if !*apply {

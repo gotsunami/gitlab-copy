@@ -9,13 +9,13 @@ import (
 // GitLaber defines some methods of glab.Client so it can be mocked easily in
 // the unit tests.
 type GitLaber interface {
-	SetBaseURL(string) error
 	BaseURL() *url.URL
+	SetBaseURL(string) error
 	// Project
 	GetProject(interface{}, ...glab.OptionFunc) (*glab.Project, *glab.Response, error)
 	// Labels
-	CreateLabel(interface{}, *glab.CreateLabelOptions, ...glab.OptionFunc) (*glab.Label, *glab.Response, error)
 	ListLabels(interface{}, *glab.ListLabelsOptions, ...glab.OptionFunc) ([]*glab.Label, *glab.Response, error)
+	CreateLabel(interface{}, *glab.CreateLabelOptions, ...glab.OptionFunc) (*glab.Label, *glab.Response, error)
 	// Milestones
 	ListMilestones(interface{}, *glab.ListMilestonesOptions, ...glab.OptionFunc) ([]*glab.Milestone, *glab.Response, error)
 	CreateMilestone(interface{}, *glab.CreateMilestoneOptions, ...glab.OptionFunc) (*glab.Milestone, *glab.Response, error)
@@ -29,6 +29,6 @@ type GitLaber interface {
 	// Users
 	ListUsers(*glab.ListUsersOptions, ...glab.OptionFunc) ([]*glab.User, *glab.Response, error)
 	// Notes
-	CreateIssueNote(interface{}, int, *glab.CreateIssueNoteOptions, ...glab.OptionFunc) (*glab.Note, *glab.Response, error)
 	ListIssueNotes(interface{}, int, *glab.ListIssueNotesOptions, ...glab.OptionFunc) ([]*glab.Note, *glab.Response, error)
+	CreateIssueNote(interface{}, int, *glab.CreateIssueNoteOptions, ...glab.OptionFunc) (*glab.Note, *glab.Response, error)
 }

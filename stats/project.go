@@ -1,4 +1,4 @@
-package main
+package stats
 
 import (
 	"errors"
@@ -9,25 +9,25 @@ import (
 	glab "github.com/xanzy/go-gitlab"
 )
 
-type projectStats struct {
-	project                               *glab.Project
-	nbIssues, nbClosed, nbOpened, nbNotes int
-	milestones, labels                    map[string]int
+type ProjectStats struct {
+	Project                               *glab.Project
+	NbIssues, NbClosed, NbOpened, NbNotes int
+	Milestones, Labels                    map[string]int
 }
 
-func newProjectStats(prj *glab.Project) *projectStats {
-	p := new(projectStats)
-	p.project = prj
-	p.milestones = make(map[string]int)
-	p.labels = make(map[string]int)
+func NewProject(prj *glab.Project) *ProjectStats {
+	p := new(ProjectStats)
+	p.Project = prj
+	p.Milestones = make(map[string]int)
+	p.Labels = make(map[string]int)
 	return p
 }
 
-func (p *projectStats) String() string {
-	return fmt.Sprintf("%d issues (%d opened, %d closed)", p.nbIssues, p.nbOpened, p.nbClosed)
+func (p *ProjectStats) String() string {
+	return fmt.Sprintf("%d issues (%d opened, %d closed)", p.NbIssues, p.NbOpened, p.NbClosed)
 }
 
-func (p *projectStats) pagination(client gitlab.GitLaber, f func(gitlab.GitLaber, *glab.ListOptions) (bool, error)) error {
+func (p *ProjectStats) pagination(client gitlab.GitLaber, f func(gitlab.GitLaber, *glab.ListOptions) (bool, error)) error {
 	if client == nil {
 		return errors.New("nil client")
 	}
@@ -49,28 +49,28 @@ func (p *projectStats) pagination(client gitlab.GitLaber, f func(gitlab.GitLaber
 	return nil
 }
 
-func (p *projectStats) computeStats(client gitlab.GitLaber) error {
+func (p *ProjectStats) ComputeStats(client gitlab.GitLaber) error {
 	if client == nil {
 		return errors.New("nil client")
 	}
 
 	action := func(c gitlab.GitLaber, lo *glab.ListOptions) (bool, error) {
 		opts := &glab.ListProjectIssuesOptions{ListOptions: glab.ListOptions{PerPage: lo.PerPage, Page: lo.Page}}
-		issues, _, err := client.ListProjectIssues(p.project.ID, opts)
+		issues, _, err := client.ListProjectIssues(p.Project.ID, opts)
 		if err != nil {
 			return false, err
 		}
 		if len(issues) > 0 {
-			p.nbIssues += len(issues)
+			p.NbIssues += len(issues)
 			for _, issue := range issues {
 				switch issue.State {
 				case "opened":
-					p.nbOpened++
+					p.NbOpened++
 				case "closed":
-					p.nbClosed++
+					p.NbClosed++
 				}
 				if issue.Milestone != nil && issue.Milestone.Title != "" {
-					p.milestones[issue.Milestone.Title]++
+					p.Milestones[issue.Milestone.Title]++
 				}
 			}
 		} else {
@@ -84,34 +84,34 @@ func (p *projectStats) computeStats(client gitlab.GitLaber) error {
 		return err
 	}
 
-	labels, _, err := client.ListLabels(p.project.ID, nil)
+	labels, _, err := client.ListLabels(p.Project.ID, nil)
 	if err != nil {
 		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
 	}
 	for _, label := range labels {
-		p.labels[label.Name]++
+		p.Labels[label.Name]++
 	}
 	return nil
 }
 
-func (p *projectStats) computeIssueNotes(client gitlab.GitLaber) error {
+func (p *ProjectStats) ComputeIssueNotes(client gitlab.GitLaber) error {
 	if client == nil {
 		return errors.New("nil client")
 	}
 
 	action := func(c gitlab.GitLaber, lo *glab.ListOptions) (bool, error) {
 		opts := &glab.ListProjectIssuesOptions{ListOptions: glab.ListOptions{PerPage: lo.PerPage, Page: lo.Page}}
-		issues, _, err := client.ListProjectIssues(p.project.ID, opts)
+		issues, _, err := client.ListProjectIssues(p.Project.ID, opts)
 		if err != nil {
 			return false, err
 		}
 		if len(issues) > 0 {
 			for _, issue := range issues {
-				notes, _, err := client.ListIssueNotes(p.project.ID, issue.IID, nil)
+				notes, _, err := client.ListIssueNotes(p.Project.ID, issue.IID, nil)
 				if err != nil {
 					return false, err
 				}
-				p.nbNotes += len(notes)
+				p.NbNotes += len(notes)
 			}
 		} else {
 			// Exit
