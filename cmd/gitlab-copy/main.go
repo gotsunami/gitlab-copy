@@ -103,7 +103,7 @@ Options:
 
 	pstats := newProjectStats(srcproj)
 
-	if err := pstats.computeStats(m.Endpoint.From); err != nil {
+	if err := pstats.computeStats(m.Endpoint.SrcClient); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("OK")
@@ -117,7 +117,7 @@ Options:
 
 	if !c.SrcPrj.LabelsOnly {
 		fmt.Printf("source: counting notes (comments), can take a while ... ")
-		if err := pstats.computeIssueNotes(m.Endpoint.From); err != nil {
+		if err := pstats.computeIssueNotes(m.Endpoint.SrcClient); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")

@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/gotsunami/gitlab-copy/config"
-	"github.com/xanzy/go-gitlab"
+	"github.com/gotsunami/gitlab-copy/gitlab"
+	glab "github.com/xanzy/go-gitlab"
 )
 
 const (
@@ -20,14 +21,14 @@ const (
 
 // GitLab server endpoints
 type Endpoint struct {
-	From, To *gitlab.Client
+	SrcClient, DstClient gitlab.GitLaber
 }
 
 type Migration struct {
 	params                 *config.Config
 	Endpoint               *Endpoint
-	srcProject, dstProject *gitlab.Project
-	toUsers                map[string]*gitlab.Client
+	srcProject, dstProject *glab.Project
+	toUsers                map[string]gitlab.GitLaber
 }
 
 func New(c *config.Config) (*Migration, error) {
@@ -35,18 +36,18 @@ func New(c *config.Config) (*Migration, error) {
 		return nil, errors.New("nil params")
 	}
 	m := &Migration{params: c}
-	m.toUsers = make(map[string]*gitlab.Client)
+	m.toUsers = make(map[string]gitlab.GitLaber)
 
-	fromgl := gitlab.NewClient(nil, c.SrcPrj.Token)
+	fromgl := gitlab.New(nil, c.SrcPrj.Token)
 	if err := fromgl.SetBaseURL(c.SrcPrj.ServerURL); err != nil {
 		return nil, err
 	}
-	togl := gitlab.NewClient(nil, c.DstPrj.Token)
+	togl := gitlab.New(nil, c.DstPrj.Token)
 	if err := togl.SetBaseURL(c.DstPrj.ServerURL); err != nil {
 		return nil, err
 	}
 	for user, token := range c.DstPrj.Users {
-		uc := gitlab.NewClient(nil, token)
+		uc := gitlab.New(nil, token)
 		if err := uc.SetBaseURL(c.DstPrj.ServerURL); err != nil {
 			return nil, err
 		}
@@ -57,8 +58,8 @@ func New(c *config.Config) (*Migration, error) {
 }
 
 // Returns project by name.
-func (m *Migration) project(endpoint *gitlab.Client, name, which string) (*gitlab.Project, error) {
-	proj, resp, err := endpoint.Projects.GetProject(name)
+func (m *Migration) project(endpoint gitlab.GitLaber, name, which string) (*glab.Project, error) {
+	proj, resp, err := endpoint.GetProject(name)
 	if resp == nil {
 		return nil, errors.New("network error: " + err.Error())
 	}
@@ -71,8 +72,8 @@ func (m *Migration) project(endpoint *gitlab.Client, name, which string) (*gitla
 	return proj, nil
 }
 
-func (m *Migration) SourceProject(name string) (*gitlab.Project, error) {
-	p, err := m.project(m.Endpoint.From, name, "source")
+func (m *Migration) SourceProject(name string) (*glab.Project, error) {
+	p, err := m.project(m.Endpoint.SrcClient, name, "source")
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +81,8 @@ func (m *Migration) SourceProject(name string) (*gitlab.Project, error) {
 	return p, nil
 }
 
-func (m *Migration) DestProject(name string) (*gitlab.Project, error) {
-	p, err := m.project(m.Endpoint.From, name, "target")
+func (m *Migration) DestProject(name string) (*glab.Project, error) {
+	p, err := m.project(m.Endpoint.SrcClient, name, "target")
 	if err != nil {
 		return nil, err
 	}
@@ -90,17 +91,17 @@ func (m *Migration) DestProject(name string) (*gitlab.Project, error) {
 }
 
 func (m *Migration) migrateIssue(issueID int) error {
-	source := m.Endpoint.From
-	target := m.Endpoint.To
+	source := m.Endpoint.SrcClient
+	target := m.Endpoint.DstClient
 
 	srcProjectID := m.srcProject.ID
 	tarProjectID := m.dstProject.ID
 
-	issue, _, err := source.Issues.GetIssue(srcProjectID, issueID)
+	issue, _, err := source.GetIssue(srcProjectID, issueID)
 	if err != nil {
 		return fmt.Errorf("target: can't fetch issue: %s", err.Error())
 	}
-	tis, _, err := target.Issues.ListProjectIssues(tarProjectID, nil)
+	tis, _, err := target.ListProjectIssues(tarProjectID, nil)
 	if err != nil {
 		return fmt.Errorf("target: can't fetch issue: %s", err.Error())
 	}
@@ -116,7 +117,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 	if skipIssue {
 		return nil
 	}
-	iopts := &gitlab.CreateIssueOptions{
+	iopts := &glab.CreateIssueOptions{
 		Title:       &issue.Title,
 		Description: &issue.Description,
 		Labels:      make([]string, 0),
@@ -124,7 +125,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 	if issue.Assignee.Username != "" {
 		// Assigned, does target user exist?
 		// User may have a different ID on target
-		users, _, err := target.Users.ListUsers(nil)
+		users, _, err := target.ListUsers(nil)
 		if err == nil {
 			for _, u := range users {
 				if u.Username == issue.Assignee.Username {
@@ -137,7 +138,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		}
 	}
 	if issue.Milestone != nil && issue.Milestone.Title != "" {
-		miles, _, err := target.Milestones.ListMilestones(tarProjectID, nil)
+		miles, _, err := target.ListMilestones(tarProjectID, nil)
 		if err == nil {
 			found := false
 			for _, mi := range miles {
@@ -150,12 +151,12 @@ func (m *Migration) migrateIssue(issueID int) error {
 			}
 			if !found {
 				// Create target milestone
-				cmopts := &gitlab.CreateMilestoneOptions{
+				cmopts := &glab.CreateMilestoneOptions{
 					Title:       &issue.Milestone.Title,
 					Description: &issue.Milestone.Description,
 					DueDate:     issue.Milestone.DueDate,
 				}
-				mi, _, err := target.Milestones.CreateMilestone(tarProjectID, cmopts)
+				mi, _, err := target.CreateMilestone(tarProjectID, cmopts)
 				if err == nil {
 					iopts.MilestoneID = &mi.ID
 				} else {
@@ -168,13 +169,13 @@ func (m *Migration) migrateIssue(issueID int) error {
 		iopts.Labels = append(iopts.Labels, label)
 	}
 	// Create target issue if not existing (same name)
-	ni, resp, err := target.Issues.CreateIssue(tarProjectID, iopts)
+	ni, resp, err := target.CreateIssue(tarProjectID, iopts)
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusRequestURITooLong {
 			fmt.Printf("target: catched a \"%s\" error, shortening issue's decription length ...\n", http.StatusText(resp.StatusCode))
 			smalld := (*iopts.Description)[:1024]
 			iopts.Description = &smalld
-			ni, _, err = target.Issues.CreateIssue(tarProjectID, iopts)
+			ni, _, err = target.CreateIssue(tarProjectID, iopts)
 			if err != nil {
 				return fmt.Errorf("target: error creating empty issue: %s", err.Error())
 			}
@@ -184,14 +185,14 @@ func (m *Migration) migrateIssue(issueID int) error {
 	}
 
 	// Copy related notes (comments)
-	notes, _, err := source.Notes.ListIssueNotes(srcProjectID, issue.IID, nil)
+	notes, _, err := source.ListIssueNotes(srcProjectID, issue.IID, nil)
 	if err != nil {
 		return fmt.Errorf("source: can't get issue #%d notes: %s", issue.IID, err.Error())
 	}
-	opts := &gitlab.CreateIssueNoteOptions{}
+	opts := &glab.CreateIssueNoteOptions{}
 	for j := len(notes) - 1; j >= 0; j-- {
 		n := notes[j]
-		target = m.Endpoint.To
+		target = m.Endpoint.SrcClient
 		// Can we write the comment with user ownership?
 		if _, ok := m.toUsers[n.Author.Username]; ok {
 			target = m.toUsers[n.Author.Username]
@@ -202,13 +203,13 @@ func (m *Migration) migrateIssue(issueID int) error {
 			bd := fmt.Sprintf("%s\n\n%s", head, n.Body)
 			opts.Body = &bd
 		}
-		_, resp, err := target.Notes.CreateIssueNote(tarProjectID, ni.IID, opts)
+		_, resp, err := target.CreateIssueNote(tarProjectID, ni.IID, opts)
 		if err != nil {
 			if resp.StatusCode == http.StatusRequestURITooLong {
 				fmt.Printf("target: note's body too long, shortening it ...\n")
 				smallb := (*opts.Body)[:1024]
 				opts.Body = &smallb
-				_, _, err := target.Notes.CreateIssueNote(tarProjectID, ni.ID, opts)
+				_, _, err := target.CreateIssueNote(tarProjectID, ni.ID, opts)
 				if err != nil {
 					return fmt.Errorf("target: error creating note (with shorter body) for issue #%d: %s", ni.IID, err.Error())
 				}
@@ -217,11 +218,11 @@ func (m *Migration) migrateIssue(issueID int) error {
 			}
 		}
 	}
-	target = m.Endpoint.To
+	target = m.Endpoint.DstClient
 
 	if issue.State == "closed" {
 		event := "close"
-		_, _, err := target.Issues.UpdateIssue(tarProjectID, ni.ID, &gitlab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
+		_, _, err := target.UpdateIssue(tarProjectID, ni.ID, &glab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
 		if err != nil {
 			return fmt.Errorf("target: error closing issue #%d: %s", ni.IID, err.Error())
 		}
@@ -230,7 +231,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 	if m.params.SrcPrj.LinkToTargetIssue {
 		var dstProjectURL string
 		// Strip URL if moving on the same GitLab  installation.
-		if m.Endpoint.From.BaseURL().Host == m.Endpoint.To.BaseURL().Host {
+		if m.Endpoint.SrcClient.BaseURL().Host == m.Endpoint.DstClient.BaseURL().Host {
 			dstProjectURL = m.dstProject.PathWithNamespace
 		} else {
 			dstProjectURL = m.dstProject.WebURL
@@ -248,8 +249,8 @@ func (m *Migration) migrateIssue(issueID int) error {
 			return fmt.Errorf("link to target issue: %s", err.Error())
 		}
 		nopt := buf.String()
-		opts := &gitlab.CreateIssueNoteOptions{&nopt}
-		_, _, err = target.Notes.CreateIssueNote(srcProjectID, issue.ID, opts)
+		opts := &glab.CreateIssueNoteOptions{&nopt}
+		_, _, err = target.CreateIssueNote(srcProjectID, issue.ID, opts)
 		if err != nil {
 			return fmt.Errorf("source: error adding closing note for issue #%d: %s", issue.IID, err.Error())
 		}
@@ -257,7 +258,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 	// Auto close source issue if needed
 	if m.params.SrcPrj.AutoCloseIssues {
 		event := "close"
-		_, _, err := source.Issues.UpdateIssue(srcProjectID, issue.ID, &gitlab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
+		_, _, err := source.UpdateIssue(srcProjectID, issue.ID, &glab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
 		if err != nil {
 			return fmt.Errorf("source: error closing issue #%d: %s", issue.IID, err.Error())
 		}
@@ -284,26 +285,26 @@ func (m *Migration) Migrate() error {
 	}
 	fmt.Println("Copying labels ...")
 
-	source := m.Endpoint.To
-	target := m.Endpoint.From
+	source := m.Endpoint.SrcClient
+	target := m.Endpoint.DstClient
 
 	srcProjectID := m.srcProject.ID
 	tarProjectID := m.dstProject.ID
 
 	curPage := 1
 	optSort := "asc"
-	opts := &gitlab.ListProjectIssuesOptions{Sort: &optSort, ListOptions: gitlab.ListOptions{PerPage: ResultsPerPage, Page: curPage}}
+	opts := &glab.ListProjectIssuesOptions{Sort: &optSort, ListOptions: glab.ListOptions{PerPage: ResultsPerPage, Page: curPage}}
 
 	s := make([]issueId, 0)
 
 	// Copy all source labels on target
-	labels, _, err := source.Labels.ListLabels(srcProjectID, nil)
+	labels, _, err := source.ListLabels(srcProjectID, nil)
 	if err != nil {
 		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
 	}
 	for _, label := range labels {
-		clopts := &gitlab.CreateLabelOptions{Name: &label.Name, Color: &label.Color, Description: &label.Description}
-		_, resp, err := target.Labels.CreateLabel(tarProjectID, clopts)
+		clopts := &glab.CreateLabelOptions{Name: &label.Name, Color: &label.Color, Description: &label.Description}
+		_, resp, err := target.CreateLabel(tarProjectID, clopts)
 		if err != nil {
 			// GitLab returns a 409 code if label already exists
 			if resp.StatusCode != http.StatusConflict {
@@ -319,27 +320,27 @@ func (m *Migration) Migrate() error {
 
 	if m.params.SrcPrj.MilestonesOnly {
 		fmt.Println("Copying milestones ...")
-		miles, _, err := source.Milestones.ListMilestones(srcProjectID, nil)
+		miles, _, err := source.ListMilestones(srcProjectID, nil)
 		if err != nil {
 			return fmt.Errorf("error getting the milestones from source project: %s", err.Error())
 		}
 		for _, mi := range miles {
 			// Create target milestone
-			cmopts := &gitlab.CreateMilestoneOptions{
+			cmopts := &glab.CreateMilestoneOptions{
 				Title:       &mi.Title,
 				Description: &mi.Description,
 				DueDate:     mi.DueDate,
 			}
-			tmi, _, err := target.Milestones.CreateMilestone(tarProjectID, cmopts)
+			tmi, _, err := target.CreateMilestone(tarProjectID, cmopts)
 			if err != nil {
 				return fmt.Errorf("target: error creating milestone '%s': %s", mi.Title, err.Error())
 			}
 			if mi.State == "closed" {
 				event := "close"
-				umopts := &gitlab.UpdateMilestoneOptions{
+				umopts := &glab.UpdateMilestoneOptions{
 					StateEvent: &event,
 				}
-				_, _, err := target.Milestones.UpdateMilestone(tarProjectID, tmi.ID, umopts)
+				_, _, err := target.UpdateMilestone(tarProjectID, tmi.ID, umopts)
 				if err != nil {
 					return fmt.Errorf("target: error closing milestone '%s': %s", mi.Title, err.Error())
 				}
@@ -353,7 +354,7 @@ func (m *Migration) Migrate() error {
 
 	// First, count issues
 	for {
-		issues, _, err := source.Issues.ListProjectIssues(srcProjectID, opts)
+		issues, _, err := source.ListProjectIssues(srcProjectID, opts)
 		if err != nil {
 			return err
 		}
@@ -378,7 +379,7 @@ func (m *Migration) Migrate() error {
 			}
 			if m.params.SrcPrj.MoveIssues {
 				// Delete issue from source project
-				_, err := source.Issues.DeleteIssue(srcProjectID, issue.ID)
+				_, err := source.DeleteIssue(srcProjectID, issue.ID)
 				if err != nil {
 					log.Printf("could not delete the issue %d: %s", issue.ID, err.Error())
 				}
