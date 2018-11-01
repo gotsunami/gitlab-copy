@@ -288,7 +288,6 @@ func (m *Migration) Migrate() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Copying labels ...")
 
 	source := m.Endpoint.SrcClient
 	target := m.Endpoint.DstClient
@@ -307,6 +306,7 @@ func (m *Migration) Migrate() error {
 	if err != nil {
 		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
 	}
+	fmt.Printf("Found %d labels ...\n", len(labels))
 	for _, label := range labels {
 		clopts := &glab.CreateLabelOptions{Name: &label.Name, Color: &label.Color, Description: &label.Description}
 		_, resp, err := target.CreateLabel(tarProjectID, clopts)
