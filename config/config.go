@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 
 	"github.com/go-yaml/yaml"
@@ -21,10 +22,10 @@ type Config struct {
 	SrcPrj, DstPrj *project
 }
 
-// Parse reads the name YAML fle and returns a config suitable for later
+// Parse reads YAML data and returns a config suitable for later
 // processing.
-func Parse(name string) (*Config, error) {
-	data, err := ioutil.ReadFile(name)
+func Parse(r io.Reader) (*Config, error) {
+	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

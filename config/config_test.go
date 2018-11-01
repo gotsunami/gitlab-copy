@@ -9,7 +9,7 @@ import (
 
 func TestParseConfig(t *testing.T) {
 	require := require.New(t)
-	_, err := Parse("wrongfile")
+	_, err := Parse(nil)
 	require.NotNil(err)
 }
 

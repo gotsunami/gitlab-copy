@@ -22,8 +22,8 @@ func (c *Client) SetBaseURL(url string) error {
 	return c.client.SetBaseURL(url)
 }
 
-func (c *Client) GetProject(interface{}, ...glab.OptionFunc) (*glab.Project, *glab.Response, error) {
-	return nil, nil, nil
+func (c *Client) GetProject(id interface{}, options ...glab.OptionFunc) (*glab.Project, *glab.Response, error) {
+	return c.client.Projects.GetProject(id, options...)
 }
 
 func (c *Client) CreateLabel(id interface{}, opt *glab.CreateLabelOptions, options ...glab.OptionFunc) (*glab.Label, *glab.Response, error) {

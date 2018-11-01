@@ -67,7 +67,12 @@ Options:
 		fmt.Fprint(os.Stderr, "Config file is missing.\n\n")
 		flag.Usage()
 	}
-	c, err := config.Parse(flag.Arg(0))
+	f, err := os.Open(flag.Arg(0))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	c, err := config.Parse(f)
 	if err != nil {
 		log.Fatal(err)
 	}
