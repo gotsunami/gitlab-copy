@@ -85,11 +85,11 @@ func TestMigrate(t *testing.T) {
 	}
 
 	for _, run := range runs {
-		conf, err := config.Parse(strings.NewReader(run.config))
-		require.NoError(err)
-		m, err = New(conf)
-		require.NoError(err)
 		t.Run(run.name, func(t *testing.T) {
+			conf, err := config.Parse(strings.NewReader(run.config))
+			require.NoError(err)
+			m, err = New(conf)
+			require.NoError(err)
 			run.setup()
 			err = m.Migrate()
 			assert.NoError(err)
