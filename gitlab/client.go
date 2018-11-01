@@ -11,9 +11,14 @@ type Client struct {
 	client *glab.Client
 }
 
+var DefaultClient GitLaber
+
+func init() {
+	DefaultClient = new(Client)
+}
+
 // New GitLab client.
-func New(httpClient *http.Client, token string) GitLaber {
-	c := new(Client)
+func (c *Client) New(httpClient *http.Client, token string) GitLaber {
 	c.client = glab.NewClient(httpClient, token)
 	return c
 }

@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"net/http"
 	"net/url"
 
 	glab "github.com/xanzy/go-gitlab"
@@ -9,6 +10,7 @@ import (
 // GitLaber defines some methods of glab.Client so it can be mocked easily in
 // the unit tests.
 type GitLaber interface {
+	New(*http.Client, string) GitLaber
 	BaseURL() *url.URL
 	SetBaseURL(string) error
 	// Project

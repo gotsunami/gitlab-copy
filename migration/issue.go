@@ -38,16 +38,16 @@ func New(c *config.Config) (*Migration, error) {
 	m := &Migration{params: c}
 	m.toUsers = make(map[string]gitlab.GitLaber)
 
-	fromgl := gitlab.New(nil, c.SrcPrj.Token)
+	fromgl := gitlab.DefaultClient.New(nil, c.SrcPrj.Token)
 	if err := fromgl.SetBaseURL(c.SrcPrj.ServerURL); err != nil {
 		return nil, err
 	}
-	togl := gitlab.New(nil, c.DstPrj.Token)
+	togl := gitlab.DefaultClient.New(nil, c.DstPrj.Token)
 	if err := togl.SetBaseURL(c.DstPrj.ServerURL); err != nil {
 		return nil, err
 	}
 	for user, token := range c.DstPrj.Users {
-		uc := gitlab.New(nil, token)
+		uc := gitlab.DefaultClient.New(nil, token)
 		if err := uc.SetBaseURL(c.DstPrj.ServerURL); err != nil {
 			return nil, err
 		}
@@ -61,7 +61,7 @@ func New(c *config.Config) (*Migration, error) {
 func (m *Migration) project(endpoint gitlab.GitLaber, name, which string) (*glab.Project, error) {
 	proj, resp, err := endpoint.GetProject(name)
 	if resp == nil {
-		return nil, errors.New("network error: " + err.Error())
+		return nil, errors.New("network error while fetching project info: nil response")
 	}
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("%s project '%s' not found", which, name)
@@ -280,8 +280,13 @@ func (a byIID) Less(i, j int) bool { return a[i].IID < a[j].IID }
 
 // Performs the issues migration.
 func (m *Migration) Migrate() error {
-	if m.srcProject == nil || m.dstProject == nil {
-		return errors.New("nil project.")
+	_, err := m.SourceProject(m.params.SrcPrj.Name)
+	if err != nil {
+		return err
+	}
+	_, err = m.DestProject(m.params.DstPrj.Name)
+	if err != nil {
+		return err
 	}
 	fmt.Println("Copying labels ...")
 

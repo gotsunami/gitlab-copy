@@ -19,12 +19,16 @@ type issueRange struct {
 
 // Config contains the configuration related to source and target projects.
 type Config struct {
-	SrcPrj, DstPrj *project
+	SrcPrj *project `yaml:"from"`
+	DstPrj *project `yaml:"to"`
 }
 
 // Parse reads YAML data and returns a config suitable for later
 // processing.
 func Parse(r io.Reader) (*Config, error) {
+	if r == nil {
+		return nil, fmt.Errorf("nil reader")
+	}
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -34,7 +38,6 @@ func Parse(r io.Reader) (*Config, error) {
 	if err := yaml.Unmarshal(data, c); err != nil {
 		return nil, err
 	}
-
 	if err := c.SrcPrj.checkData("source"); err != nil {
 		return nil, err
 	}

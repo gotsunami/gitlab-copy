@@ -5,27 +5,32 @@ import (
 	"testing"
 
 	"github.com/gotsunami/gitlab-copy/config"
+	"github.com/gotsunami/gitlab-copy/gitlab"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const cfg = `
 from:
-    url: https://gitlab.keeneyetechnologies.com
-    token: CKZtsLqaHVVryZxebVmt
-    project: core/opencv-contrib
+    url: https://gitlab.mydomain.com
+    token: sourcetoken
+    project: source/project
 #    issues:
 #    - 5
 #    - 8-10
     labelsOnly: true
     # moveIssues: true
 to:
-    url: https://gitlab.keeneyetechnologies.com
-    token: CKZtsLqaHVVryZxebVmt
-    project: core/io
+    url: https://gitlab.mydomain.com
+    token: desttoken
+    project: dest/project
 `
 
-func TestParseConfig(t *testing.T) {
+func init() {
+	gitlab.DefaultClient = new(fakeClient)
+}
+
+func TestMigrate(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
