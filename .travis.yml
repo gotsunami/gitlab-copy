@@ -1,7 +1,7 @@
 language: go
 
 go:
-    - tip
+    - "1.11.2"
 
-test:
-    - make test
+script:
+    - go test ./... -cover
