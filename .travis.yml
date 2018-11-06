@@ -4,4 +4,5 @@ go:
     - "1.11.2"
 
 script:
+    - make
     - go test ./... -cover
