@@ -329,6 +329,7 @@ func (m *Migration) Migrate() error {
 		if err != nil {
 			return fmt.Errorf("error getting the milestones from source project: %s", err.Error())
 		}
+		fmt.Printf("Found %d milestones\n", len(miles))
 		for _, mi := range miles {
 			// Create target milestone
 			cmopts := &glab.CreateMilestoneOptions{

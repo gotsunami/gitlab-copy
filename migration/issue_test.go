@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -10,33 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	glab "github.com/xanzy/go-gitlab"
 )
-
-const cfg1 = `
-from:
-    url: https://gitlab.mydomain.com
-    token: sourcetoken
-    project: source/project
-#    issues:
-#    - 5
-#    - 8-10
-    labelsOnly: true
-    # moveIssues: true
-to:
-    url: https://gitlab.mydomain.com
-    token: desttoken
-    project: dest/project
-`
-
-const cfg2 = `
-from:
-    url: https://gitlab.mydomain.com
-    token: sourcetoken
-    project: source/project
-to:
-    url: https://gitlab.mydomain.com
-    token: desttoken
-    project: dest/project
-`
 
 var dummyClient = new(fakeClient)
 
@@ -55,15 +29,27 @@ func TestMigrate(t *testing.T) {
 		name    string // Sub-test name
 		config  string // YAML config
 		setup   func() // Defines any option before calling Migrate()
-		asserts func(*Migration)
+		asserts func(error, *Migration)
 	}{
+		{
+			"SourceProject returns an error",
+			cfg1,
+			func() {
+				dummyClient.errors.getProject = errors.New("err")
+			},
+			func(err error, m *Migration) {
+				assert.Error(err)
+				dummyClient.errors.getProject = nil
+			},
+		},
 		{
 			"copy 2 labels only",
 			cfg1,
 			func() {
 				dummyClient.labels = makeLabels("bug", "doc")
 			},
-			func(m *Migration) {
+			func(err error, m *Migration) {
+				require.NoError(err)
 				fk := m.Endpoint.DstClient.(*fakeClient)
 				assert.Equal(2, len(fk.labels))
 				assert.Equal("bug", fk.labels[0].Name)
@@ -76,10 +62,98 @@ func TestMigrate(t *testing.T) {
 			func() {
 				dummyClient.labels = makeLabels("P0")
 			},
-			func(m *Migration) {
+			func(err error, m *Migration) {
+				require.NoError(err)
 				fk := m.Endpoint.DstClient.(*fakeClient)
 				assert.Equal(1, len(fk.labels))
 				assert.Equal("P0", fk.labels[0].Name)
+			},
+		},
+		{
+			"copy milestones only",
+			cfg3,
+			func() {
+				dummyClient.milestones = makeMilestones("v1", "v2")
+			},
+			func(err error, m *Migration) {
+				require.NoError(err)
+				fk := m.Endpoint.DstClient.(*fakeClient)
+				assert.Equal(2, len(fk.milestones))
+				assert.Equal("v1", fk.milestones[0].Title)
+				assert.Equal("v2", fk.milestones[1].Title)
+			},
+		},
+		{
+			"copy milestones only, error listing milestones",
+			cfg3,
+			func() {
+				dummyClient.milestones = makeMilestones("v1")
+				dummyClient.errors.listMilestones = errors.New("err")
+			},
+			func(err error, m *Migration) {
+				assert.Error(err)
+				dummyClient.errors.listMilestones = nil
+			},
+		},
+		{
+			"copy milestones only, error creating milestones",
+			cfg3,
+			func() {
+				dummyClient.milestones = makeMilestones("v1")
+				dummyClient.errors.createMilestone = errors.New("err")
+			},
+			func(err error, m *Migration) {
+				assert.Error(err)
+				dummyClient.errors.createMilestone = nil
+			},
+		},
+		{
+			"list labels fails",
+			cfg3,
+			func() {
+				dummyClient.errors.listLabels = errors.New("err")
+			},
+			func(err error, m *Migration) {
+				assert.Error(err)
+				dummyClient.errors.listLabels = nil
+			},
+		},
+		{
+			"create labels fails",
+			cfg3,
+			func() {
+				dummyClient.errors.createLabel = errors.New("err")
+			},
+			func(err error, m *Migration) {
+				assert.Error(err)
+				dummyClient.errors.createLabel = nil
+			},
+		},
+		{
+			"copy milestone only state closed",
+			cfg3,
+			func() {
+				dummyClient.milestones = makeMilestones("v1")
+				dummyClient.milestones[0].State = "closed"
+			},
+			func(err error, m *Migration) {
+				require.NoError(err)
+				fk := m.Endpoint.DstClient.(*fakeClient)
+				assert.Equal(1, len(fk.milestones))
+				assert.Equal("close", fk.milestones[0].State)
+			},
+		},
+		{
+			"copy closed milestone fails",
+			cfg3,
+			func() {
+				dummyClient.milestones = makeMilestones("v1")
+				dummyClient.milestones[0].State = "closed"
+				dummyClient.errors.updateMilestone = errors.New("err")
+			},
+			func(err error, m *Migration) {
+				assert.Error(err)
+				dummyClient.errors.updateMilestone = nil
 			},
 		},
 	}
@@ -92,8 +166,7 @@ func TestMigrate(t *testing.T) {
 			require.NoError(err)
 			run.setup()
 			err = m.Migrate()
-			assert.NoError(err)
-			run.asserts(m)
+			run.asserts(err, m)
 		})
 	}
 }
@@ -106,4 +179,14 @@ func makeLabels(names ...string) []*glab.Label {
 		}
 	}
 	return labels
+}
+
+func makeMilestones(names ...string) []*glab.Milestone {
+	ms := make([]*glab.Milestone, len(names))
+	for k, n := range names {
+		ms[k] = &glab.Milestone{
+			Title: n,
+		}
+	}
+	return ms
 }
