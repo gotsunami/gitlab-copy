@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -9,31 +10,39 @@ import (
 )
 
 type fakeClient struct {
-	url    string
-	errors struct {
+	baseUrl *url.URL
+	errors  struct {
 		createIssue, createIssueNote, createLabel, createMilestone   error
 		deleteIssue                                                  error
 		getIssue, getProject                                         error
 		listIssueNotes, listLabels, listMilestones, listProjetIssues error
 		listUsers                                                    error
 		updateIssue, updateMilestone                                 error
+		baseURL                                                      error
 	}
 	labels     []*glab.Label
 	milestones []*glab.Milestone
+	users      []*glab.User
+	issues     []*glab.Issue
 }
 
 // New fake GitLab client, for the UT.
 func (c *fakeClient) New(httpClient *http.Client, token string) gitlab.GitLaber {
-	return c
+	return new(fakeClient)
 }
 
-func (c *fakeClient) SetBaseURL(url string) error {
-	c.url = url
-	return nil
+func (c *fakeClient) SetBaseURL(u string) error {
+	err := c.errors.baseURL
+	if err != nil {
+		return err
+	}
+	uu, err := url.Parse(u)
+	c.baseUrl = uu
+	return err
 }
 
 func (c *fakeClient) BaseURL() *url.URL {
-	return nil
+	return c.baseUrl
 }
 
 func (c *fakeClient) GetProject(interface{}, ...glab.OptionFunc) (*glab.Project, *glab.Response, error) {
@@ -60,11 +69,17 @@ func (c *fakeClient) CreateLabel(id interface{}, opt *glab.CreateLabelOptions, o
 		return nil, r, err
 	}
 	r.StatusCode = http.StatusOK
+	for _, l := range c.labels {
+		if l.Name == *opt.Name {
+			return nil, nil, fmt.Errorf("label %q already exists", l.Name)
+		}
+	}
 	l := &glab.Label{
 		Name:        *opt.Name,
 		Color:       *opt.Color,
 		Description: *opt.Description,
 	}
+	c.labels = append(c.labels, l)
 	return l, r, nil
 }
 
@@ -89,7 +104,16 @@ func (c *fakeClient) CreateMilestone(id interface{}, opt *glab.CreateMilestoneOp
 	if err != nil {
 		return nil, nil, err
 	}
-	m := new(glab.Milestone)
+	m := &glab.Milestone{
+		ID:    len(c.milestones),
+		Title: *opt.Title,
+	}
+	for _, p := range c.milestones {
+		if p.Title == m.Title {
+			return nil, nil, fmt.Errorf("milestone %q already exists", p.Title)
+		}
+	}
+	c.milestones = append(c.milestones, m)
 	return m, nil, nil
 }
 
@@ -165,4 +189,14 @@ func (c *fakeClient) UpdateIssue(pid interface{}, issue int, opt *glab.UpdateIss
 		return nil, nil, err
 	}
 	return nil, nil, nil
+}
+
+func (c *fakeClient) clearMilestones() {
+	c.milestones = nil
+	c.milestones = make([]*glab.Milestone, 0)
+}
+
+func (c *fakeClient) clearLabels() {
+	c.labels = nil
+	c.labels = make([]*glab.Label, 0)
 }
