@@ -132,7 +132,8 @@ func (c *fakeClient) ListProjectIssues(id interface{}, opt *glab.ListProjectIssu
 	if err != nil {
 		return nil, nil, err
 	}
-	return nil, nil, nil
+	// FIXME: have a pagination otherwise infinite loop.
+	return c.issues, nil, nil
 }
 
 func (c *fakeClient) DeleteIssue(id interface{}, issue int, options ...glab.OptionFunc) (*glab.Response, error) {

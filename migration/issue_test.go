@@ -171,6 +171,16 @@ func TestMigrate(t *testing.T) {
 				dst.errors.updateMilestone = nil
 			},
 		},
+		{
+			"copy 1 issue",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+			},
+			func(err error, src, dst *fakeClient) {
+				require.NoError(err)
+			},
+		},
 	}
 
 	for _, run := range runs {
@@ -210,4 +220,15 @@ func makeMilestones(names ...string) []*glab.Milestone {
 		}
 	}
 	return ms
+}
+
+func makeIssues(names ...string) []*glab.Issue {
+	issues := make([]*glab.Issue, len(names))
+	for k, n := range names {
+		issues[k] = &glab.Issue{
+			ID:    k,
+			Title: n,
+		}
+	}
+	return issues
 }
