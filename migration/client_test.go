@@ -20,10 +20,11 @@ type fakeClient struct {
 		updateIssue, updateMilestone                                 error
 		baseURL                                                      error
 	}
-	labels     []*glab.Label
-	milestones []*glab.Milestone
-	users      []*glab.User
-	issues     []*glab.Issue
+	labels         []*glab.Label
+	milestones     []*glab.Milestone
+	users          []*glab.User
+	issues         []*glab.Issue
+	exitPagination bool
 }
 
 // New fake GitLab client, for the UT.
@@ -132,7 +133,10 @@ func (c *fakeClient) ListProjectIssues(id interface{}, opt *glab.ListProjectIssu
 	if err != nil {
 		return nil, nil, err
 	}
-	// FIXME: have a pagination otherwise infinite loop.
+	if opt != nil && opt.ListOptions.Page > 1 {
+		// No more pages. End of pagination.
+		return nil, nil, nil
+	}
 	return c.issues, nil, nil
 }
 
@@ -149,7 +153,7 @@ func (c *fakeClient) GetIssue(pid interface{}, id int, options ...glab.OptionFun
 	if err != nil {
 		return nil, nil, err
 	}
-	return nil, nil, nil
+	return c.issues[id], nil, nil
 }
 
 func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
@@ -157,7 +161,17 @@ func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, 
 	if err != nil {
 		return nil, nil, err
 	}
-	return nil, nil, nil
+	i := &glab.Issue{
+		ID:    len(c.issues),
+		Title: *opt.Title,
+	}
+	for _, p := range c.issues {
+		if p.Title == i.Title {
+			return nil, nil, fmt.Errorf("milestone %q already exists", p.Title)
+		}
+	}
+	c.issues = append(c.issues, i)
+	return i, nil, nil
 }
 
 func (c *fakeClient) ListUsers(opt *glab.ListUsersOptions, opts ...glab.OptionFunc) ([]*glab.User, *glab.Response, error) {
