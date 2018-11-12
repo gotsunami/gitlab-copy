@@ -380,8 +380,7 @@ func (m *Migration) Migrate() error {
 	for _, issue := range s {
 		if m.params.SrcPrj.Matches(issue.IID) {
 			if err := m.migrateIssue(issue.IID); err != nil {
-				fmt.Println(err.Error(), errDuplicateIssue.Error())
-				if err.Error() == errDuplicateIssue.Error() {
+				if err == errDuplicateIssue {
 					fmt.Printf("target: issue %d already exists, skipping...", issue.IID)
 					continue
 				}

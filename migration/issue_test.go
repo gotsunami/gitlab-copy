@@ -184,6 +184,51 @@ func TestMigrate(t *testing.T) {
 				}
 			},
 		},
+		{
+			"copy 1 issue with error",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.errors.listProjetIssues = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				require.Error(err)
+			},
+		},
+		{
+			"No fatal error if duplicate issue",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				dst.issues = makeIssues("issue1")
+			},
+			func(err error, src, dst *fakeClient) {
+				// No error since we don't want the program to exit.
+				assert.NoError(err)
+			},
+		},
+		{
+			"Move issue",
+			cfg4,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+			},
+		},
+		{
+			"No fatal error if delete issue fails",
+			cfg4,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.errors.deleteIssue = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				// No error since we don't want the program to exit.
+				assert.NoError(err)
+			},
+		},
 	}
 
 	for _, run := range runs {
@@ -220,7 +265,7 @@ func TestMigrateIssue(t *testing.T) {
 				dst.issues = makeIssues("issue1")
 			},
 			func(err error, src, dst *fakeClient) {
-				assert.NoError(err)
+				assert.Error(err)
 			},
 		},
 	}
@@ -230,6 +275,10 @@ func TestMigrateIssue(t *testing.T) {
 			require.NoError(err)
 			// Load the conf.
 			m, err := New(conf)
+			require.NoError(err)
+			_, err = m.SourceProject(m.params.SrcPrj.Name)
+			require.NoError(err)
+			_, err = m.DestProject(m.params.DstPrj.Name)
 			require.NoError(err)
 			// Setup.
 			run.setup(source(m), dest(m))

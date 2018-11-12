@@ -38,3 +38,15 @@ to:
     token: desttoken
     project: dest/project
 `
+
+const cfg4 = `
+from:
+    url: https://gitlab.mydomain.com
+    token: sourcetoken
+    project: source/project
+    moveIssues: true
+to:
+    url: https://gitlab.mydomain.com
+    token: desttoken
+    project: dest/project
+`
