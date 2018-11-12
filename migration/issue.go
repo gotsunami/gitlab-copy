@@ -15,6 +15,10 @@ import (
 	glab "github.com/xanzy/go-gitlab"
 )
 
+var (
+	errDuplicateIssue = errors.New("Duplicate Issue")
+)
+
 const (
 	ResultsPerPage = 100
 )
@@ -29,6 +33,7 @@ type Migration struct {
 	Endpoint               *Endpoint
 	srcProject, dstProject *glab.Project
 	toUsers                map[string]gitlab.GitLaber
+	skipIssue              bool
 }
 
 func New(c *config.Config) (*Migration, error) {
@@ -105,17 +110,11 @@ func (m *Migration) migrateIssue(issueID int) error {
 	if err != nil {
 		return fmt.Errorf("target: can't fetch issue: %s", err.Error())
 	}
-	skipIssue := false
 	for _, t := range tis {
 		if issue.Title == t.Title {
-			// Target issue already exists, let's skip this one
-			skipIssue = true
-			log.Printf("target: issue '%s' already exists, skipping...", issue.Title)
-			break
+			// Target issue already exists, let's skip this one.
+			return errDuplicateIssue
 		}
-	}
-	if skipIssue {
-		return nil
 	}
 	iopts := &glab.CreateIssueOptions{
 		Title:       &issue.Title,
@@ -381,7 +380,12 @@ func (m *Migration) Migrate() error {
 	for _, issue := range s {
 		if m.params.SrcPrj.Matches(issue.IID) {
 			if err := m.migrateIssue(issue.IID); err != nil {
-				log.Printf(err.Error())
+				fmt.Println(err.Error(), errDuplicateIssue.Error())
+				if err.Error() == errDuplicateIssue.Error() {
+					fmt.Printf("target: issue %d already exists, skipping...", issue.IID)
+					continue
+				}
+				return err
 			}
 			if m.params.SrcPrj.MoveIssues {
 				// Delete issue from source project

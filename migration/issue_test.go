@@ -179,6 +179,9 @@ func TestMigrate(t *testing.T) {
 			},
 			func(err error, src, dst *fakeClient) {
 				require.NoError(err)
+				if assert.Len(dst.issues, 1) {
+					assert.Equal("issue1", dst.issues[0].Title)
+				}
 			},
 		},
 	}
@@ -194,6 +197,44 @@ func TestMigrate(t *testing.T) {
 			run.setup(source(m), dest(m))
 			// Run the migration.
 			err = m.Migrate()
+			// Asserts and tear down.
+			run.asserts(err, source(m), dest(m))
+		})
+	}
+}
+func TestMigrateIssue(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	runs := []struct {
+		name    string                     // Sub-test name
+		config  string                     // YAML config
+		setup   func(src, dst *fakeClient) // Defines any option before calling Migrate()
+		asserts func(err error, src, dst *fakeClient)
+	}{
+		{
+			"Duplicate issue fails",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				dst.issues = makeIssues("issue1")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+			},
+		},
+	}
+	for _, run := range runs {
+		t.Run(run.name, func(t *testing.T) {
+			conf, err := config.Parse(strings.NewReader(run.config))
+			require.NoError(err)
+			// Load the conf.
+			m, err := New(conf)
+			require.NoError(err)
+			// Setup.
+			run.setup(source(m), dest(m))
+			// Run the migration.
+			err = m.migrateIssue(0)
 			// Asserts and tear down.
 			run.asserts(err, source(m), dest(m))
 		})

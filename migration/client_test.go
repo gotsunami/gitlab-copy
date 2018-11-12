@@ -167,7 +167,7 @@ func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, 
 	}
 	for _, p := range c.issues {
 		if p.Title == i.Title {
-			return nil, nil, fmt.Errorf("milestone %q already exists", p.Title)
+			return nil, nil, fmt.Errorf("issue %q already exists", p.Title)
 		}
 	}
 	c.issues = append(c.issues, i)
@@ -214,4 +214,9 @@ func (c *fakeClient) clearMilestones() {
 func (c *fakeClient) clearLabels() {
 	c.labels = nil
 	c.labels = make([]*glab.Label, 0)
+}
+
+func (c *fakeClient) clearIssues() {
+	c.issues = nil
+	c.issues = make([]*glab.Issue, 0)
 }
