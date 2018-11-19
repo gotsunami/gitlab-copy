@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 	"testing"
@@ -268,6 +269,191 @@ func TestMigrateIssue(t *testing.T) {
 				assert.Error(err)
 			},
 		},
+		{
+			"Get issue fails",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.errors.getIssue = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"List project issues fails",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				dst.errors.listProjetIssues = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"Assigned user, but no target user match",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issues[0].Assignee.Username = "mat"
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+				assert.Empty(dst.issues[0].Assignee.Username)
+			},
+		},
+		{
+			"Assigned user, fetching users fails",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issues[0].Assignee.Username = "mat"
+				dst.errors.listUsers = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"Issue has assigned user, target user match",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issues[0].Assignee.Username = "mat"
+				dst.users = makeUsers("mat")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+				if assert.Len(dst.issues, 1) {
+					assert.Equal("mat", dst.issues[0].Assignee.Username)
+				}
+			},
+		},
+		{
+			"Issue has a milestone, not target match",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				m := &glab.Milestone{
+					Title: "v1.0",
+				}
+				src.issues[0].Milestone = m
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+				if assert.Len(dst.milestones, 1) {
+					assert.Equal("v1.0", dst.milestones[0].Title)
+				}
+			},
+		},
+		{
+			"Issue has a milestone, create target milestone error",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				m := &glab.Milestone{
+					Title: "v1.0",
+				}
+				src.issues[0].Milestone = m
+				dst.errors.createMilestone = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"Issue has a milestone, list target milestones error",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				m := &glab.Milestone{
+					Title: "v1.0",
+				}
+				src.issues[0].Milestone = m
+				dst.errors.listMilestones = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"Issue has a milestone, found on target",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				m := &glab.Milestone{
+					Title: "v1.0",
+				}
+				src.issues[0].Milestone = m
+				dst.milestones = makeMilestones("v1.0")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+				assert.Len(dst.milestones, 1)
+			},
+		},
+		{
+			"Copy existing labels",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issues[0].Labels = []string{"P1", "P2"}
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+			},
+		},
+		{
+			"Failing creating target issue",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				dst.errors.createIssue = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"Failing creating target issue, URI too long HTTP error, empty issue description",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				dst.errors.createIssue = errors.New("err")
+				dst.httpErrorRaiseURITooLong = true
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"Failing creating target issue, URI too long HTTP error, with issue description",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				buf := make([]byte, 1128)
+				desc := bytes.NewBuffer(buf)
+				desc.WriteString("Some desc")
+				src.issues[0].Description = desc.String()
+				dst.errors.createIssue = errors.New("err")
+				dst.httpErrorRaiseURITooLong = true
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"List issue notes fails",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.errors.listIssueNotes = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
 	}
 	for _, run := range runs {
 		t.Run(run.name, func(t *testing.T) {
@@ -321,4 +507,15 @@ func makeIssues(names ...string) []*glab.Issue {
 		}
 	}
 	return issues
+}
+
+func makeUsers(names ...string) []*glab.User {
+	users := make([]*glab.User, len(names))
+	for k, n := range names {
+		users[k] = &glab.User{
+			ID:       k,
+			Username: n,
+		}
+	}
+	return users
 }

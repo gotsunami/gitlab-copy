@@ -162,16 +162,22 @@ func (m *Migration) migrateIssue(issueID int) error {
 					return fmt.Errorf("target: error creating milestone '%s': %s", issue.Milestone.Title, err.Error())
 				}
 			}
+		} else {
+			return fmt.Errorf("target: error listing milestones: %s", err.Error())
 		}
 	}
+	// Copy existing labels.
 	for _, label := range issue.Labels {
 		iopts.Labels = append(iopts.Labels, label)
 	}
-	// Create target issue if not existing (same name)
+	// Create target issue if not existing (same name).
 	ni, resp, err := target.CreateIssue(tarProjectID, iopts)
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusRequestURITooLong {
-			fmt.Printf("target: catched a \"%s\" error, shortening issue's decription length ...\n", http.StatusText(resp.StatusCode))
+			fmt.Printf("target: caught a %q error, shortening issue's decription length ...\n", http.StatusText(resp.StatusCode))
+			if len(*iopts.Description) == 0 {
+				return fmt.Errorf("target: error creating issue: no description but %q error ...\n", http.StatusText(resp.StatusCode))
+			}
 			smalld := (*iopts.Description)[:1024]
 			iopts.Description = &smalld
 			ni, _, err = target.CreateIssue(tarProjectID, iopts)

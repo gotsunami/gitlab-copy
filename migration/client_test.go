@@ -20,11 +20,12 @@ type fakeClient struct {
 		updateIssue, updateMilestone                                 error
 		baseURL                                                      error
 	}
-	labels         []*glab.Label
-	milestones     []*glab.Milestone
-	users          []*glab.User
-	issues         []*glab.Issue
-	exitPagination bool
+	labels                   []*glab.Label
+	milestones               []*glab.Milestone
+	users                    []*glab.User
+	issues                   []*glab.Issue
+	exitPagination           bool
+	httpErrorRaiseURITooLong bool
 }
 
 // New fake GitLab client, for the UT.
@@ -159,11 +160,21 @@ func (c *fakeClient) GetIssue(pid interface{}, id int, options ...glab.OptionFun
 func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
 	err := c.errors.createIssue
 	if err != nil {
+		if c.httpErrorRaiseURITooLong {
+			r := &glab.Response{
+				Response: new(http.Response),
+			}
+			r.Response.StatusCode = http.StatusRequestURITooLong
+			return nil, r, err
+		}
 		return nil, nil, err
 	}
 	i := &glab.Issue{
 		ID:    len(c.issues),
 		Title: *opt.Title,
+	}
+	if len(opt.AssigneeIDs) > 0 {
+		i.Assignee.Username = "mat"
 	}
 	for _, p := range c.issues {
 		if p.Title == i.Title {
@@ -179,7 +190,7 @@ func (c *fakeClient) ListUsers(opt *glab.ListUsersOptions, opts ...glab.OptionFu
 	if err != nil {
 		return nil, nil, err
 	}
-	return nil, nil, nil
+	return c.users, nil, nil
 }
 
 func (c *fakeClient) ListIssueNotes(pid interface{}, issue int, opt *glab.ListIssueNotesOptions, options ...glab.OptionFunc) ([]*glab.Note, *glab.Response, error) {
