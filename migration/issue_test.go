@@ -497,6 +497,29 @@ func TestMigrateIssue(t *testing.T) {
 				assert.Error(err)
 			},
 		},
+		{
+			"Closed issue",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issues[0].State = "closed"
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+			},
+		},
+		{
+			"Closed issue, with error when updating target issue",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issues[0].State = "closed"
+				dst.errors.updateIssue = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
 	}
 	for _, run := range runs {
 		t.Run(run.name, func(t *testing.T) {
