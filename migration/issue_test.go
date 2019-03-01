@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gotsunami/gitlab-copy/config"
 	"github.com/gotsunami/gitlab-copy/gitlab"
@@ -248,6 +249,7 @@ func TestMigrate(t *testing.T) {
 		})
 	}
 }
+
 func TestMigrateIssue(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
@@ -454,6 +456,36 @@ func TestMigrateIssue(t *testing.T) {
 				assert.Error(err)
 			},
 		},
+		{
+			"Issue has notes",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issueNotes = makeNotes("n1", "n2")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.NoError(err)
+			},
+		},
+		{
+			"Issue with notes, create issue note error",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issueNotes = makeNotes("n1", "n2")
+				/*
+					buf := make([]byte, 1128)
+					desc := bytes.NewBuffer(buf)
+					desc.WriteString("Some desc")
+					src.issues[0].Description = desc.String()
+					dst.httpErrorRaiseURITooLong = true
+				*/
+				dst.errors.createIssueNote = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
 	}
 	for _, run := range runs {
 		t.Run(run.name, func(t *testing.T) {
@@ -518,4 +550,19 @@ func makeUsers(names ...string) []*glab.User {
 		}
 	}
 	return users
+}
+
+func makeNotes(names ...string) []*glab.Note {
+	notes := make([]*glab.Note, len(names))
+	now := time.Now()
+	for k, n := range names {
+		notes[k] = &glab.Note{
+			ID:        k,
+			Title:     n,
+			CreatedAt: &now,
+		}
+		notes[k].Author.Name = "me"
+		notes[k].Author.Username = "me"
+	}
+	return notes
 }

@@ -20,14 +20,16 @@ var (
 )
 
 const (
+	// ResultsPerPage is the Number of results per page.
 	ResultsPerPage = 100
 )
 
-// GitLab server endpoints
+// Endpoint refers to the GitLab server endpoints.
 type Endpoint struct {
 	SrcClient, DstClient gitlab.GitLaber
 }
 
+// Migration defines a migration step.
 type Migration struct {
 	params                 *config.Config
 	Endpoint               *Endpoint
@@ -36,6 +38,7 @@ type Migration struct {
 	skipIssue              bool
 }
 
+// Creates a new migration.
 func New(c *config.Config) (*Migration, error) {
 	if c == nil {
 		return nil, errors.New("nil params")
@@ -197,7 +200,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 	opts := &glab.CreateIssueNoteOptions{}
 	for j := len(notes) - 1; j >= 0; j-- {
 		n := notes[j]
-		target = m.Endpoint.SrcClient
+		target = m.Endpoint.DstClient
 		// Can we write the comment with user ownership?
 		if _, ok := m.toUsers[n.Author.Username]; ok {
 			target = m.toUsers[n.Author.Username]

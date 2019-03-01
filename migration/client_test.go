@@ -10,7 +10,7 @@ import (
 )
 
 type fakeClient struct {
-	baseUrl *url.URL
+	baseURL *url.URL
 	errors  struct {
 		createIssue, createIssueNote, createLabel, createMilestone   error
 		deleteIssue                                                  error
@@ -24,6 +24,7 @@ type fakeClient struct {
 	milestones               []*glab.Milestone
 	users                    []*glab.User
 	issues                   []*glab.Issue
+	issueNotes               []*glab.Note
 	exitPagination           bool
 	httpErrorRaiseURITooLong bool
 }
@@ -39,12 +40,12 @@ func (c *fakeClient) SetBaseURL(u string) error {
 		return err
 	}
 	uu, err := url.Parse(u)
-	c.baseUrl = uu
+	c.baseURL = uu
 	return err
 }
 
 func (c *fakeClient) BaseURL() *url.URL {
-	return c.baseUrl
+	return c.baseURL
 }
 
 func (c *fakeClient) GetProject(interface{}, ...glab.OptionFunc) (*glab.Project, *glab.Response, error) {
@@ -198,13 +199,16 @@ func (c *fakeClient) ListIssueNotes(pid interface{}, issue int, opt *glab.ListIs
 	if err != nil {
 		return nil, nil, err
 	}
-	return nil, nil, nil
+	return c.issueNotes, nil, nil
 }
 
 func (c *fakeClient) CreateIssueNote(pid interface{}, issue int, opt *glab.CreateIssueNoteOptions, options ...glab.OptionFunc) (*glab.Note, *glab.Response, error) {
 	err := c.errors.createIssueNote
 	if err != nil {
-		return nil, nil, err
+		r := &glab.Response{
+			Response: new(http.Response),
+		}
+		return nil, r, err
 	}
 	return nil, nil, nil
 }
