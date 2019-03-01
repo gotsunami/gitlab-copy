@@ -208,6 +208,9 @@ func (c *fakeClient) CreateIssueNote(pid interface{}, issue int, opt *glab.Creat
 		r := &glab.Response{
 			Response: new(http.Response),
 		}
+		if c.httpErrorRaiseURITooLong {
+			r.Response.StatusCode = http.StatusRequestURITooLong
+		}
 		return nil, r, err
 	}
 	return nil, nil, nil

@@ -473,13 +473,24 @@ func TestMigrateIssue(t *testing.T) {
 			func(src, dst *fakeClient) {
 				src.issues = makeIssues("issue1")
 				src.issueNotes = makeNotes("n1", "n2")
-				/*
-					buf := make([]byte, 1128)
-					desc := bytes.NewBuffer(buf)
-					desc.WriteString("Some desc")
-					src.issues[0].Description = desc.String()
-					dst.httpErrorRaiseURITooLong = true
-				*/
+				dst.errors.createIssueNote = errors.New("err")
+			},
+			func(err error, src, dst *fakeClient) {
+				assert.Error(err)
+			},
+		},
+		{
+			"Issue with notes, but description too long",
+			cfg2,
+			func(src, dst *fakeClient) {
+				src.issues = makeIssues("issue1")
+				src.issueNotes = makeNotes("n1", "n2")
+				// Large data buffer to raise an URITooLong error.
+				buf := make([]byte, 1128)
+				desc := bytes.NewBuffer(buf)
+				desc.WriteString("Some desc")
+				src.issueNotes[1].Body = desc.String()
+				dst.httpErrorRaiseURITooLong = true
 				dst.errors.createIssueNote = errors.New("err")
 			},
 			func(err error, src, dst *fakeClient) {

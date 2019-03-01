@@ -198,6 +198,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		return fmt.Errorf("source: can't get issue #%d notes: %s", issue.IID, err.Error())
 	}
 	opts := &glab.CreateIssueNoteOptions{}
+	// Notes on target will be added in reverse order.
 	for j := len(notes) - 1; j >= 0; j-- {
 		n := notes[j]
 		target = m.Endpoint.DstClient
@@ -215,8 +216,10 @@ func (m *Migration) migrateIssue(issueID int) error {
 		if err != nil {
 			if resp.StatusCode == http.StatusRequestURITooLong {
 				fmt.Printf("target: note's body too long, shortening it ...\n")
-				smallb := (*opts.Body)[:1024]
-				opts.Body = &smallb
+				if len(*opts.Body) > 1024 {
+					smallb := (*opts.Body)[:1024]
+					opts.Body = &smallb
+				}
 				_, _, err := target.CreateIssueNote(tarProjectID, ni.ID, opts)
 				if err != nil {
 					return fmt.Errorf("target: error creating note (with shorter body) for issue #%d: %s", ni.IID, err.Error())
