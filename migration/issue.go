@@ -261,7 +261,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		}
 		nopt := buf.String()
 		opts := &glab.CreateIssueNoteOptions{&nopt}
-		_, _, err = target.CreateIssueNote(srcProjectID, issue.ID, opts)
+		_, _, err = target.CreateIssueNote(srcProjectID, issue.IID, opts)
 		if err != nil {
 			return fmt.Errorf("source: error adding closing note for issue #%d: %s", issue.IID, err.Error())
 		}
