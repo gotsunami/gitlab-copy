@@ -22,7 +22,8 @@ build: version
 	@go build -v -o bin/${BIN} ${MAIN_CMD}
 
 test: version
-	@go test ${MAIN_CMD}
+	@go test ./... -coverprofile=/tmp/cover.out
+	@go tool cover -html=/tmp/cover.out -o /tmp/coverage.html
 
 coverage:
 	@./tools/coverage.sh `pwd`

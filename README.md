@@ -28,10 +28,9 @@ The following features are available:
 - Add a note with a link to the new issue created in the target project
 - Use a custom link text template, like "Closed in favor or me/myotherproject#12"
 
-## Usage
+## Getting Started
 
-First, make sure you have valid GitLab account tokens for both source and destination GitLab installations. They are used
-to access GitLab resources without authentication. GitLab private tokens are availble in "*Profile Settings* -> *Account*".
+Here are some instructions to get started. First make sure you have valid GitLab account tokens for both source and destination GitLab installations. They are used to access GitLab resources without authentication. GitLab private tokens are availble in "*Profile Settings* -> *Account*".
 
 Now, write a `gitlab.yml` YAML config file to specify source and target projects, along with your GitLab account tokens:
 
@@ -45,6 +44,23 @@ to:
   token: anothertoken
   project: namespace/project
 ```
+
+That's it. You may want to run the program now. See the section below.
+
+## Run it!
+
+Now grab some project stats by running
+```
+$ ./gitlab-copy gitlab.yml
+```
+
+If everything looks good, run the same command, this time with the `-y` flag to effectively copie issues between GitLab
+instances (they can be the same):
+```
+$ ./gitlab-copy -y gitlab.yml
+```
+
+## More Features
 
 Note that a specific issue or ranges of issues can be specified in the YAML config file. If you want to
 copy only issue #15 and issues #20 to #30, add an `issues` key in the `from:` key:
@@ -102,17 +118,6 @@ to:
   users:
     bob: anothertoken
     alice: herowntoken
-```
-
-Now grab some project stats by running
-```
-$ ./gitlab-copy gitlab.yml
-```
-
-If everything looks good, run the same command, this time with the `-y` flag to effectively copie issues between GitLab
-instances (they can be the same):
-```
-$ ./gitlab-copy -y gitlab.yml
 ```
 
 ## Compile From Source

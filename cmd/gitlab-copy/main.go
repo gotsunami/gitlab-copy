@@ -7,6 +7,10 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/gotsunami/gitlab-copy/config"
+	"github.com/gotsunami/gitlab-copy/migration"
+	"github.com/gotsunami/gitlab-copy/stats"
 )
 
 func map2Human(m map[string]int) string {
@@ -63,7 +67,12 @@ Options:
 		fmt.Fprint(os.Stderr, "Config file is missing.\n\n")
 		flag.Usage()
 	}
-	c, err := parseConfig(flag.Arg(0))
+	f, err := os.Open(flag.Arg(0))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	c, err := config.Parse(f)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,63 +81,63 @@ Options:
 		fmt.Println("DUMMY MODE: won't apply anything (stats only)\n--")
 	}
 
-	m, err := NewMigration(c)
+	m, err := migration.New(c)
 	if err != nil {
 		log.Fatal(err)
 	}
-	srcproj, err := m.sourceProject(c.From.Name)
+	srcproj, err := m.SourceProject(c.SrcPrj.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if srcproj == nil {
-		log.Fatalf("source project not found on %s", c.From.ServerURL)
+		log.Fatalf("source project not found on %s", c.SrcPrj.ServerURL)
 	}
-	fmt.Printf("source: %s at %s\n", c.From.Name, c.From.ServerURL)
+	fmt.Printf("source: %s at %s\n", c.SrcPrj.Name, c.SrcPrj.ServerURL)
 
-	dstproj, err := m.destProject(c.To.Name)
+	dstproj, err := m.DestProject(c.DstPrj.Name)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if dstproj == nil {
-		log.Fatalf("target project not found on %s", c.To.ServerURL)
+		log.Fatalf("target project not found on %s", c.DstPrj.ServerURL)
 	}
-	fmt.Printf("target: %s at %s\n", c.To.Name, c.To.ServerURL)
+	fmt.Printf("target: %s at %s\n", c.DstPrj.Name, c.DstPrj.ServerURL)
 	fmt.Println("--")
 
 	// Find out how many issues we have
 	fmt.Printf("source: finding issues ... ")
 
-	pstats := newProjectStats(srcproj)
+	pstats := stats.NewProject(srcproj)
 
-	if err := pstats.computeStats(m.endpoint.from); err != nil {
+	if err := pstats.ComputeStats(m.Endpoint.SrcClient); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("OK")
 	fmt.Printf("source: %v\n", pstats)
-	if len(pstats.milestones) > 0 {
-		fmt.Printf("source: %d milestone(s): %s\n", len(pstats.milestones), map2Human(pstats.milestones))
+	if len(pstats.Milestones) > 0 {
+		fmt.Printf("source: %d milestone(s): %s\n", len(pstats.Milestones), map2Human(pstats.Milestones))
 	}
-	if len(pstats.labels) > 0 {
-		fmt.Printf("source: %d label(s): %s\n", len(pstats.labels), map2Human(pstats.labels))
+	if len(pstats.Labels) > 0 {
+		fmt.Printf("source: %d label(s): %s\n", len(pstats.Labels), map2Human(pstats.Labels))
 	}
 
-	if !c.From.LabelsOnly {
+	if !c.SrcPrj.LabelsOnly {
 		fmt.Printf("source: counting notes (comments), can take a while ... ")
-		if err := pstats.computeIssueNotes(m.endpoint.from); err != nil {
+		if err := pstats.ComputeIssueNotes(m.Endpoint.SrcClient); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("\rsource: %d notes%50s\n", pstats.nbNotes, " ")
+		fmt.Printf("\rsource: %d notes%50s\n", pstats.NbNotes, " ")
 	}
 	fmt.Println("--")
 	if !*apply {
-		if c.From.LabelsOnly {
+		if c.SrcPrj.LabelsOnly {
 			fmt.Println("Will copy labels only.")
 		} else {
-			if c.From.MilestonesOnly {
+			if c.SrcPrj.MilestonesOnly {
 				fmt.Println("Will copy milestones only.")
 			} else {
 				action := "Copy"
-				if c.From.MoveIssues {
+				if c.SrcPrj.MoveIssues {
 					action = "Move"
 				}
 				fmt.Printf(`Those actions will be performed:
@@ -139,12 +148,12 @@ Options:
 - Set issue's assignee (if user exists) and milestone, if any
 - Copy notes (attached to issues)
 `, action)
-				if c.From.AutoCloseIssues {
+				if c.SrcPrj.AutoCloseIssues {
 					fmt.Println("- Auto-close source issues")
 				}
-				if c.From.LinkToTargetIssue {
+				if c.SrcPrj.LinkToTargetIssue {
 					fmt.Println("- Add a note with a link to new issue")
-					fmt.Println("- Use the link text template: " + c.From.LinkToTargetIssueText)
+					fmt.Println("- Use the link text template: " + c.SrcPrj.LinkToTargetIssueText)
 				}
 			}
 		}
@@ -153,7 +162,7 @@ Options:
 		os.Exit(0)
 	}
 
-	if err := m.migrate(); err != nil {
+	if err := m.Migrate(); err != nil {
 		log.Fatal(err)
 	}
 }
