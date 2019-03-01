@@ -233,7 +233,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 
 	if issue.State == "closed" {
 		event := "close"
-		_, _, err := target.UpdateIssue(tarProjectID, ni.ID, &glab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
+		_, _, err := target.UpdateIssue(tarProjectID, ni.IID, &glab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
 		if err != nil {
 			return fmt.Errorf("target: error closing issue #%d: %s", ni.IID, err.Error())
 		}
