@@ -9,6 +9,10 @@ import (
 	glab "github.com/xanzy/go-gitlab"
 )
 
+const (
+	LabelsPerPage = 100
+)
+
 type ProjectStats struct {
 	Project                               *glab.Project
 	NbIssues, NbClosed, NbOpened, NbNotes int
@@ -84,13 +88,22 @@ func (p *ProjectStats) ComputeStats(client gitlab.GitLaber) error {
 		return err
 	}
 
-	labels, _, err := client.ListLabels(p.Project.ID, nil)
-	if err != nil {
-		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
+	currentLabelPage := 1
+	for {
+		paginatedLabels, _, err := client.ListLabels(p.Project.ID, &glab.ListLabelsOptions{PerPage: LabelsPerPage, Page: currentLabelPage})
+		if err != nil {
+			return fmt.Errorf("source: can't fetch labels: %s", err.Error())
+		}
+		if len(paginatedLabels) == 0 {
+			break
+		}
+
+		for _, label := range paginatedLabels {
+			p.Labels[label.Name]++
+		}
+		currentLabelPage++
 	}
-	for _, label := range labels {
-		p.Labels[label.Name]++
-	}
+
 	return nil
 }
 
