@@ -21,6 +21,7 @@ type fakeClient struct {
 		baseURL                                                      error
 	}
 	labels                   []*glab.Label
+	labelsPage2              []*glab.Label
 	milestones               []*glab.Milestone
 	users                    []*glab.User
 	issues                   []*glab.Issue
@@ -91,7 +92,15 @@ func (c *fakeClient) ListLabels(id interface{}, opt *glab.ListLabelsOptions, opt
 	if err != nil {
 		return nil, nil, err
 	}
-	return c.labels, nil, nil
+
+	switch page := opt.Page; page {
+	case 1:
+		return c.labels, nil, nil
+	case 2:
+		return c.labelsPage2, nil, nil
+	default:
+		return make([]*glab.Label, 0), nil, nil
+	}
 }
 
 func (c *fakeClient) ListMilestones(id interface{}, opt *glab.ListMilestonesOptions, options ...glab.OptionFunc) ([]*glab.Milestone, *glab.Response, error) {
