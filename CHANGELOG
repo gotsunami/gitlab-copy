@@ -1,3 +1,7 @@
+v 0.8
+- Use go.mod instead of Gopkg and upgrade dependencies. #55
+- Built with Go 1.20.1
+
 v 0.7
   - Use GitLab API v4. #29
   - Better testing through API mocking and unit tests. #41
