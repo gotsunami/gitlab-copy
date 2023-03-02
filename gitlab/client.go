@@ -1,16 +1,19 @@
 package gitlab
 
 import (
-	"net/http"
 	"net/url"
 
+	"github.com/rotisserie/eris"
 	glab "github.com/xanzy/go-gitlab"
 )
 
+// Client is an implementation of the GitLaber interface that makes real use
+// of the GitLab API.
 type Client struct {
 	client *glab.Client
 }
 
+// DefaultClient is the default client instance to use.
 var DefaultClient GitLaber
 
 func init() {
@@ -18,70 +21,149 @@ func init() {
 }
 
 // New GitLab client.
-func (c *Client) New(httpClient *http.Client, token string) GitLaber {
-	c.client = glab.NewClient(httpClient, token)
-	return c
+func New(token string, options ...glab.ClientOptionFunc) (GitLaber, error) {
+	c, err := glab.NewClient(token, options...)
+	if err != nil {
+		return nil, eris.Wrap(err, "new client")
+	}
+	DefaultClient.(*Client).client = c
+	return DefaultClient, err
 }
 
-func (c *Client) SetBaseURL(url string) error {
-	return c.client.SetBaseURL(url)
+func (c *Client) Client() *glab.Client {
+	return c.client
 }
 
-func (c *Client) GetProject(id interface{}, options ...glab.OptionFunc) (*glab.Project, *glab.Response, error) {
-	return c.client.Projects.GetProject(id, options...)
+// GetProject returns project info.
+func (c *Client) GetProject(
+	id interface{},
+	opt *glab.GetProjectOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Project, *glab.Response, error) {
+	return c.client.Projects.GetProject(id, opt, options...)
 }
 
-func (c *Client) CreateLabel(id interface{}, opt *glab.CreateLabelOptions, options ...glab.OptionFunc) (*glab.Label, *glab.Response, error) {
+// CreateLabel creates a label.
+func (c *Client) CreateLabel(
+	id interface{},
+	opt *glab.CreateLabelOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Label, *glab.Response, error) {
 	return c.client.Labels.CreateLabel(id, opt, options...)
 }
 
-func (c *Client) ListLabels(id interface{}, opt *glab.ListLabelsOptions, options ...glab.OptionFunc) ([]*glab.Label, *glab.Response, error) {
+// ListLabels list all labels.
+func (c *Client) ListLabels(
+	id interface{},
+	opt *glab.ListLabelsOptions,
+	options ...glab.RequestOptionFunc,
+) ([]*glab.Label, *glab.Response, error) {
 	return c.client.Labels.ListLabels(id, opt, options...)
 }
 
-func (c *Client) ListMilestones(id interface{}, opt *glab.ListMilestonesOptions, options ...glab.OptionFunc) ([]*glab.Milestone, *glab.Response, error) {
+// ListMilestones list all milestones.
+func (c *Client) ListMilestones(
+	id interface{},
+	opt *glab.ListMilestonesOptions,
+	options ...glab.RequestOptionFunc,
+) ([]*glab.Milestone, *glab.Response, error) {
 	return c.client.Milestones.ListMilestones(id, opt, options...)
 }
 
-func (c *Client) CreateMilestone(id interface{}, opt *glab.CreateMilestoneOptions, options ...glab.OptionFunc) (*glab.Milestone, *glab.Response, error) {
+// CreateMilestone creates a milestone.
+func (c *Client) CreateMilestone(
+	id interface{},
+	opt *glab.CreateMilestoneOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Milestone, *glab.Response, error) {
 	return c.client.Milestones.CreateMilestone(id, opt, options...)
 }
 
-func (c *Client) UpdateMilestone(id interface{}, milestone int, opt *glab.UpdateMilestoneOptions, options ...glab.OptionFunc) (*glab.Milestone, *glab.Response, error) {
+// UpdateMilestone updates a milestone.
+func (c *Client) UpdateMilestone(
+	id interface{},
+	milestone int,
+	opt *glab.UpdateMilestoneOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Milestone, *glab.Response, error) {
 	return c.client.Milestones.UpdateMilestone(id, milestone, opt, options...)
 }
 
-func (c *Client) ListProjectIssues(id interface{}, opt *glab.ListProjectIssuesOptions, options ...glab.OptionFunc) ([]*glab.Issue, *glab.Response, error) {
+// ListProjectIssues list all issues.
+func (c *Client) ListProjectIssues(
+	id interface{},
+	opt *glab.ListProjectIssuesOptions,
+	options ...glab.RequestOptionFunc,
+) ([]*glab.Issue, *glab.Response, error) {
 	return c.client.Issues.ListProjectIssues(id, opt, options...)
 }
 
-func (c *Client) DeleteIssue(id interface{}, issue int, options ...glab.OptionFunc) (*glab.Response, error) {
+// DeleteIssue removes an issue.
+func (c *Client) DeleteIssue(
+	id interface{},
+	issue int,
+	options ...glab.RequestOptionFunc,
+) (*glab.Response, error) {
 	return c.client.Issues.DeleteIssue(id, issue, options...)
 }
 
-func (c *Client) GetIssue(pid interface{}, id int, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
+// GetIssue returns an issue.
+func (c *Client) GetIssue(
+	pid interface{},
+	id int,
+	options ...glab.RequestOptionFunc,
+) (*glab.Issue, *glab.Response, error) {
 	return c.client.Issues.GetIssue(pid, id, options...)
 }
-func (c *Client) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
+
+// CreateIssue creates an issue.
+func (c *Client) CreateIssue(
+	pid interface{},
+	opt *glab.CreateIssueOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Issue, *glab.Response, error) {
 	return c.client.Issues.CreateIssue(pid, opt, options...)
 }
 
-func (c *Client) ListUsers(opt *glab.ListUsersOptions, opts ...glab.OptionFunc) ([]*glab.User, *glab.Response, error) {
+// ListUsers lists all users.
+func (c *Client) ListUsers(
+	opt *glab.ListUsersOptions,
+	opts ...glab.RequestOptionFunc,
+) ([]*glab.User, *glab.Response, error) {
 	return c.client.Users.ListUsers(opt, opts...)
 }
 
-func (c *Client) ListIssueNotes(pid interface{}, issue int, opt *glab.ListIssueNotesOptions, options ...glab.OptionFunc) ([]*glab.Note, *glab.Response, error) {
+// ListIssueNotes list issue notes.
+func (c *Client) ListIssueNotes(
+	pid interface{},
+	issue int,
+	opt *glab.ListIssueNotesOptions,
+	options ...glab.RequestOptionFunc,
+) ([]*glab.Note, *glab.Response, error) {
 	return c.client.Notes.ListIssueNotes(pid, issue, opt, options...)
 }
 
-func (c *Client) CreateIssueNote(pid interface{}, issue int, opt *glab.CreateIssueNoteOptions, options ...glab.OptionFunc) (*glab.Note, *glab.Response, error) {
+// CreateIssueNote creates a note for an issue.
+func (c *Client) CreateIssueNote(
+	pid interface{},
+	issue int,
+	opt *glab.CreateIssueNoteOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Note, *glab.Response, error) {
 	return c.client.Notes.CreateIssueNote(pid, issue, opt, options...)
 }
 
-func (c *Client) UpdateIssue(pid interface{}, issue int, opt *glab.UpdateIssueOptions, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
+// UpdateIssue updates an issue.
+func (c *Client) UpdateIssue(
+	pid interface{},
+	issue int,
+	opt *glab.UpdateIssueOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Issue, *glab.Response, error) {
 	return c.client.Issues.UpdateIssue(pid, issue, opt, options...)
 }
 
+// BaseURL returns the base URL used.
 func (c *Client) BaseURL() *url.URL {
 	return c.client.BaseURL()
 }
