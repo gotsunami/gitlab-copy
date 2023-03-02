@@ -47,16 +47,22 @@ func New(c *config.Config) (*Migration, error) {
 	m := &Migration{params: c}
 	m.toUsers = make(map[string]gitlab.GitLaber)
 
-	fromgl, err := gitlab.New(c.SrcPrj.Token, glab.WithBaseURL(c.SrcPrj.ServerURL))
+	fromgl, err := gitlab.Service().WithToken(
+		c.SrcPrj.Token,
+		glab.WithBaseURL(c.SrcPrj.ServerURL),
+	)
 	if err != nil {
 		return nil, eris.Wrap(err, "migration: src token")
 	}
-	togl, err := gitlab.New(c.DstPrj.Token, glab.WithBaseURL(c.DstPrj.ServerURL))
+	togl, err := gitlab.Service().WithToken(
+		c.DstPrj.Token,
+		glab.WithBaseURL(c.DstPrj.ServerURL),
+	)
 	if err != nil {
 		return nil, eris.Wrap(err, "migration: dst token")
 	}
 	for user, token := range c.DstPrj.Users {
-		uc, err := gitlab.New(token, glab.WithBaseURL(c.DstPrj.ServerURL))
+		uc, err := gitlab.Service().WithToken(token, glab.WithBaseURL(c.DstPrj.ServerURL))
 		if err != nil {
 			return nil, eris.Wrap(err, "migration: dst users check")
 		}

@@ -6,11 +6,22 @@ import (
 	glab "github.com/xanzy/go-gitlab"
 )
 
+var service GitLaber
+
+func UseService(c GitLaber) {
+	service = c
+}
+
+func Service() GitLaber {
+	return service
+}
+
 // GitLaber defines some methods of glab.Client so it can be mocked easily in
 // the unit tests.
 type GitLaber interface {
+	WithToken(string, ...glab.ClientOptionFunc) (GitLaber, error)
 	BaseURL() *url.URL
-	Client() *glab.Client
+	GitLab() *glab.Client
 	// Project
 	GetProject(interface{}, *glab.GetProjectOptions, ...glab.RequestOptionFunc) (*glab.Project, *glab.Response, error)
 	// Labels

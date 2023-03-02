@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gotsunami/gitlab-copy/config"
+	"github.com/gotsunami/gitlab-copy/gitlab"
 	"github.com/gotsunami/gitlab-copy/migration"
 	"github.com/gotsunami/gitlab-copy/stats"
 )
@@ -76,6 +77,8 @@ Options:
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	gitlab.UseService(gitlab.NewClient())
 
 	if !*apply {
 		fmt.Println("DUMMY MODE: won't apply anything (stats only)\n--")

@@ -30,25 +30,23 @@ type fakeClient struct {
 }
 
 // New fake GitLab client, for the UT.
-func (c *fakeClient) New(httpClient *http.Client, token string) gitlab.GitLaber {
+func NewFakeClient(token string) gitlab.GitLaber {
 	return new(fakeClient)
 }
 
-func (c *fakeClient) SetBaseURL(u string) error {
-	err := c.errors.baseURL
-	if err != nil {
-		return err
-	}
-	uu, err := url.Parse(u)
-	c.baseURL = uu
-	return err
+func (c *fakeClient) WithToken(token string, options ...glab.ClientOptionFunc) (gitlab.GitLaber, error) {
+	return new(fakeClient), nil
 }
 
 func (c *fakeClient) BaseURL() *url.URL {
 	return c.baseURL
 }
 
-func (c *fakeClient) GetProject(interface{}, ...glab.OptionFunc) (*glab.Project, *glab.Response, error) {
+func (c *fakeClient) GitLab() *glab.Client {
+	return nil
+}
+
+func (c *fakeClient) GetProject(id interface{}, opt *glab.GetProjectOptions, options ...glab.RequestOptionFunc) (*glab.Project, *glab.Response, error) {
 	err := c.errors.getProject
 	if err != nil {
 		return nil, nil, err
@@ -62,7 +60,7 @@ func (c *fakeClient) GetProject(interface{}, ...glab.OptionFunc) (*glab.Project,
 	return p, r, nil
 }
 
-func (c *fakeClient) CreateLabel(id interface{}, opt *glab.CreateLabelOptions, options ...glab.OptionFunc) (*glab.Label, *glab.Response, error) {
+func (c *fakeClient) CreateLabel(id interface{}, opt *glab.CreateLabelOptions, options ...glab.RequestOptionFunc) (*glab.Label, *glab.Response, error) {
 	r := &glab.Response{
 		Response: new(http.Response),
 	}
@@ -86,7 +84,7 @@ func (c *fakeClient) CreateLabel(id interface{}, opt *glab.CreateLabelOptions, o
 	return l, r, nil
 }
 
-func (c *fakeClient) ListLabels(id interface{}, opt *glab.ListLabelsOptions, options ...glab.OptionFunc) ([]*glab.Label, *glab.Response, error) {
+func (c *fakeClient) ListLabels(id interface{}, opt *glab.ListLabelsOptions, options ...glab.RequestOptionFunc) ([]*glab.Label, *glab.Response, error) {
 	err := c.errors.listLabels
 	if err != nil {
 		return nil, nil, err
@@ -94,7 +92,7 @@ func (c *fakeClient) ListLabels(id interface{}, opt *glab.ListLabelsOptions, opt
 	return c.labels, nil, nil
 }
 
-func (c *fakeClient) ListMilestones(id interface{}, opt *glab.ListMilestonesOptions, options ...glab.OptionFunc) ([]*glab.Milestone, *glab.Response, error) {
+func (c *fakeClient) ListMilestones(id interface{}, opt *glab.ListMilestonesOptions, options ...glab.RequestOptionFunc) ([]*glab.Milestone, *glab.Response, error) {
 	err := c.errors.listMilestones
 	if err != nil {
 		return nil, nil, err
@@ -102,7 +100,7 @@ func (c *fakeClient) ListMilestones(id interface{}, opt *glab.ListMilestonesOpti
 	return c.milestones, nil, nil
 }
 
-func (c *fakeClient) CreateMilestone(id interface{}, opt *glab.CreateMilestoneOptions, options ...glab.OptionFunc) (*glab.Milestone, *glab.Response, error) {
+func (c *fakeClient) CreateMilestone(id interface{}, opt *glab.CreateMilestoneOptions, options ...glab.RequestOptionFunc) (*glab.Milestone, *glab.Response, error) {
 	err := c.errors.createMilestone
 	if err != nil {
 		return nil, nil, err
@@ -120,7 +118,12 @@ func (c *fakeClient) CreateMilestone(id interface{}, opt *glab.CreateMilestoneOp
 	return m, nil, nil
 }
 
-func (c *fakeClient) UpdateMilestone(id interface{}, milestone int, opt *glab.UpdateMilestoneOptions, options ...glab.OptionFunc) (*glab.Milestone, *glab.Response, error) {
+func (c *fakeClient) UpdateMilestone(
+	id interface{},
+	milestone int,
+	opt *glab.UpdateMilestoneOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Milestone, *glab.Response, error) {
 	err := c.errors.updateMilestone
 	if err != nil {
 		return nil, nil, err
@@ -130,7 +133,11 @@ func (c *fakeClient) UpdateMilestone(id interface{}, milestone int, opt *glab.Up
 	return m, nil, nil
 }
 
-func (c *fakeClient) ListProjectIssues(id interface{}, opt *glab.ListProjectIssuesOptions, options ...glab.OptionFunc) ([]*glab.Issue, *glab.Response, error) {
+func (c *fakeClient) ListProjectIssues(
+	id interface{},
+	opt *glab.ListProjectIssuesOptions,
+	options ...glab.RequestOptionFunc,
+) ([]*glab.Issue, *glab.Response, error) {
 	err := c.errors.listProjetIssues
 	if err != nil {
 		return nil, nil, err
@@ -142,7 +149,7 @@ func (c *fakeClient) ListProjectIssues(id interface{}, opt *glab.ListProjectIssu
 	return c.issues, nil, nil
 }
 
-func (c *fakeClient) DeleteIssue(id interface{}, issue int, options ...glab.OptionFunc) (*glab.Response, error) {
+func (c *fakeClient) DeleteIssue(interface{}, int, ...glab.RequestOptionFunc) (*glab.Response, error) {
 	err := c.errors.deleteIssue
 	if err != nil {
 		return nil, err
@@ -150,7 +157,7 @@ func (c *fakeClient) DeleteIssue(id interface{}, issue int, options ...glab.Opti
 	return nil, nil
 }
 
-func (c *fakeClient) GetIssue(pid interface{}, id int, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
+func (c *fakeClient) GetIssue(pid interface{}, id int, options ...glab.RequestOptionFunc) (*glab.Issue, *glab.Response, error) {
 	err := c.errors.getIssue
 	if err != nil {
 		return nil, nil, err
@@ -158,7 +165,7 @@ func (c *fakeClient) GetIssue(pid interface{}, id int, options ...glab.OptionFun
 	return c.issues[id], nil, nil
 }
 
-func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
+func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, options ...glab.RequestOptionFunc) (*glab.Issue, *glab.Response, error) {
 	err := c.errors.createIssue
 	if err != nil {
 		if c.httpErrorRaiseURITooLong {
@@ -171,10 +178,11 @@ func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, 
 		return nil, nil, err
 	}
 	i := &glab.Issue{
-		ID:    len(c.issues),
-		Title: *opt.Title,
+		ID:       len(c.issues),
+		Title:    *opt.Title,
+		Assignee: &glab.IssueAssignee{},
 	}
-	if len(opt.AssigneeIDs) > 0 {
+	if opt.AssigneeIDs != nil && len(*opt.AssigneeIDs) > 0 {
 		i.Assignee.Username = "mat"
 	}
 	for _, p := range c.issues {
@@ -186,7 +194,7 @@ func (c *fakeClient) CreateIssue(pid interface{}, opt *glab.CreateIssueOptions, 
 	return i, nil, nil
 }
 
-func (c *fakeClient) ListUsers(opt *glab.ListUsersOptions, opts ...glab.OptionFunc) ([]*glab.User, *glab.Response, error) {
+func (c *fakeClient) ListUsers(opt *glab.ListUsersOptions, opts ...glab.RequestOptionFunc) ([]*glab.User, *glab.Response, error) {
 	err := c.errors.listUsers
 	if err != nil {
 		return nil, nil, err
@@ -194,7 +202,12 @@ func (c *fakeClient) ListUsers(opt *glab.ListUsersOptions, opts ...glab.OptionFu
 	return c.users, nil, nil
 }
 
-func (c *fakeClient) ListIssueNotes(pid interface{}, issue int, opt *glab.ListIssueNotesOptions, options ...glab.OptionFunc) ([]*glab.Note, *glab.Response, error) {
+func (c *fakeClient) ListIssueNotes(
+	pid interface{},
+	issue int,
+	opt *glab.ListIssueNotesOptions,
+	options ...glab.RequestOptionFunc,
+) ([]*glab.Note, *glab.Response, error) {
 	err := c.errors.listIssueNotes
 	if err != nil {
 		return nil, nil, err
@@ -202,7 +215,15 @@ func (c *fakeClient) ListIssueNotes(pid interface{}, issue int, opt *glab.ListIs
 	return c.issueNotes, nil, nil
 }
 
-func (c *fakeClient) CreateIssueNote(pid interface{}, issue int, opt *glab.CreateIssueNoteOptions, options ...glab.OptionFunc) (*glab.Note, *glab.Response, error) {
+func (c *fakeClient) Client() *glab.Client {
+	return nil
+}
+func (c *fakeClient) CreateIssueNote(
+	pid interface{},
+	issue int,
+	opt *glab.CreateIssueNoteOptions,
+	options ...glab.RequestOptionFunc,
+) (*glab.Note, *glab.Response, error) {
 	err := c.errors.createIssueNote
 	if err != nil {
 		r := &glab.Response{
@@ -216,7 +237,7 @@ func (c *fakeClient) CreateIssueNote(pid interface{}, issue int, opt *glab.Creat
 	return nil, nil, nil
 }
 
-func (c *fakeClient) UpdateIssue(pid interface{}, issue int, opt *glab.UpdateIssueOptions, options ...glab.OptionFunc) (*glab.Issue, *glab.Response, error) {
+func (c *fakeClient) UpdateIssue(interface{}, int, *glab.UpdateIssueOptions, ...glab.RequestOptionFunc) (*glab.Issue, *glab.Response, error) {
 	err := c.errors.updateIssue
 	if err != nil {
 		return nil, nil, err

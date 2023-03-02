@@ -66,11 +66,11 @@ func (c *Config) checkUserTokens() error {
 	fmt.Printf("User tokens provided (for writing notes): %d\n", len(c.DstPrj.Users))
 	fmt.Println("Checking user tokens ... ")
 	for user, token := range c.DstPrj.Users {
-		g, err := gitlab.New(token, glab.WithBaseURL(c.DstPrj.ServerURL))
+		g, err := gitlab.Service().WithToken(token, glab.WithBaseURL(c.DstPrj.ServerURL))
 		if err != nil {
 			return eris.Wrap(err, "check user tokens")
 		}
-		u, _, err := g.Client().Users.CurrentUser()
+		u, _, err := g.GitLab().Users.CurrentUser()
 		if err != nil {
 			return eris.Wrapf(err, "Failed using the API with user %q", user)
 		}
