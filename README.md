@@ -17,6 +17,8 @@ Installing `gitlab-copy` is very easy since it comes as a static binary with no 
 
 The following features are available:
 
+- Support for GitLab instances with self-signed TLS certificates by using the `-k` CLI flag (since `v0.8`)
+- Support for different GitLab hosts/instances (since `v0.8`)
 - Copy milestones if not existing on target (use `milestonesOnly` to copy milestones only, see below)
 - Copy all source labels on target (use `labelsOnly` to copy labels only, see below)
 - Copy issues if not existing on target (by title)
@@ -58,6 +60,12 @@ If everything looks good, run the same command, this time with the `-y` flag to 
 instances (they can be the same):
 ```
 $ ./gitlab-copy -y gitlab.yml
+```
+
+If one of the GitLab instances uses a self-signed TLS certificate, use the `-k` flag (available in `v0.8`) to skip the TLS verification process:
+
+```
+$ ./gitlab-copy -k -y gitlab.yml
 ```
 
 ## More Features
@@ -122,15 +130,24 @@ to:
 
 ## Compile From Source
 
-Ensure you have a working [Go](https://www.golang.org) 1.5+ installation then:
+Ensure you have a working [Go](https://www.golang.org) 1.18+ installation then:
 ```
-$ go get -u github.com/gotsunami/gitlab-copy
-$ make
+$ go install github.com/gotsunami/gitlab-copy/cmd/gitlab-copy@latest
 ```
 
 - The program gets compiled into `bin/gitlab-copy`
 - Cross-compile with `make buildall`
 - Prepare distribution packages with `make dist`
+
+## Donate
+
+If you like this tool and want to support its development, a donation would be greatly appreciated!
+
+It's not about the amount at all: making a donation boosts the motivation to work on a project. Thank you very much if you can give anything.
+
+Monero address: `88uoutKJS2w3FfkKyJFsNwKPHzaHfTAo6LyTmHSAoQHgCkCeR8FUG4hZ8oD4fnt8iP7i1Ty72V6CLMHi1yUzLCZKHU1pB7c`
+
+![My monero address](qr-donate.png)
 
 ## License
 
