@@ -97,7 +97,7 @@ func (m *Migration) SourceProject(name string) (*glab.Project, error) {
 }
 
 func (m *Migration) DestProject(name string) (*glab.Project, error) {
-	p, err := m.project(m.Endpoint.SrcClient, name, "target")
+	p, err := m.project(m.Endpoint.DstClient, name, "target")
 	if err != nil {
 		return nil, err
 	}
