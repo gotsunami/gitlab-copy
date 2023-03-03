@@ -14,10 +14,8 @@ import (
 	glab "github.com/xanzy/go-gitlab"
 )
 
-var dummyClient = new(fakeClient)
-
 func init() {
-	gitlab.DefaultClient = dummyClient
+	gitlab.UseService(new(fakeClient))
 }
 
 func source(m *Migration) *fakeClient {
@@ -570,6 +568,9 @@ func makeIssues(names ...string) []*glab.Issue {
 		issues[k] = &glab.Issue{
 			ID:    k,
 			Title: n,
+		}
+		issues[k].Assignee = &glab.IssueAssignee{
+			Name: "me",
 		}
 	}
 	return issues

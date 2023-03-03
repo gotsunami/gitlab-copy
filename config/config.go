@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 
 	"github.com/go-yaml/yaml"
-	"github.com/xanzy/go-gitlab"
+	"github.com/gotsunami/gitlab-copy/gitlab"
+	"github.com/rotisserie/eris"
+	glab "github.com/xanzy/go-gitlab"
 )
 
 const (
@@ -64,13 +66,13 @@ func (c *Config) checkUserTokens() error {
 	fmt.Printf("User tokens provided (for writing notes): %d\n", len(c.DstPrj.Users))
 	fmt.Println("Checking user tokens ... ")
 	for user, token := range c.DstPrj.Users {
-		cl := gitlab.NewClient(nil, token)
-		if err := cl.SetBaseURL(c.DstPrj.ServerURL); err != nil {
-			return err
-		}
-		u, _, err := cl.Users.CurrentUser()
+		g, err := gitlab.Service().WithToken(token, glab.WithBaseURL(c.DstPrj.ServerURL))
 		if err != nil {
-			return fmt.Errorf("Failed using the API with user '%s': %s", user, err.Error())
+			return eris.Wrap(err, "check user tokens")
+		}
+		u, _, err := g.GitLab().Users.CurrentUser()
+		if err != nil {
+			return eris.Wrapf(err, "Failed using the API with user %q", user)
 		}
 		if u.Username != user {
 			return fmt.Errorf("Token %s matches user '%s', not '%s' as defined in the config file", token, u.Username, user)

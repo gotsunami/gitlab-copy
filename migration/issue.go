@@ -12,6 +12,7 @@ import (
 
 	"github.com/gotsunami/gitlab-copy/config"
 	"github.com/gotsunami/gitlab-copy/gitlab"
+	"github.com/rotisserie/eris"
 	glab "github.com/xanzy/go-gitlab"
 )
 
@@ -38,7 +39,7 @@ type Migration struct {
 	skipIssue              bool
 }
 
-// Creates a new migration.
+// New creates a new migration.
 func New(c *config.Config) (*Migration, error) {
 	if c == nil {
 		return nil, errors.New("nil params")
@@ -46,18 +47,24 @@ func New(c *config.Config) (*Migration, error) {
 	m := &Migration{params: c}
 	m.toUsers = make(map[string]gitlab.GitLaber)
 
-	fromgl := gitlab.DefaultClient.New(nil, c.SrcPrj.Token)
-	if err := fromgl.SetBaseURL(c.SrcPrj.ServerURL); err != nil {
-		return nil, err
+	fromgl, err := gitlab.Service().WithToken(
+		c.SrcPrj.Token,
+		glab.WithBaseURL(c.SrcPrj.ServerURL),
+	)
+	if err != nil {
+		return nil, eris.Wrap(err, "migration: src token")
 	}
-	togl := gitlab.DefaultClient.New(nil, c.DstPrj.Token)
-	if err := togl.SetBaseURL(c.DstPrj.ServerURL); err != nil {
-		return nil, err
+	togl, err := gitlab.Service().WithToken(
+		c.DstPrj.Token,
+		glab.WithBaseURL(c.DstPrj.ServerURL),
+	)
+	if err != nil {
+		return nil, eris.Wrap(err, "migration: dst token")
 	}
 	for user, token := range c.DstPrj.Users {
-		uc := gitlab.DefaultClient.New(nil, token)
-		if err := uc.SetBaseURL(c.DstPrj.ServerURL); err != nil {
-			return nil, err
+		uc, err := gitlab.Service().WithToken(token, glab.WithBaseURL(c.DstPrj.ServerURL))
+		if err != nil {
+			return nil, eris.Wrap(err, "migration: dst users check")
 		}
 		m.toUsers[user] = uc
 	}
@@ -67,9 +74,9 @@ func New(c *config.Config) (*Migration, error) {
 
 // Returns project by name.
 func (m *Migration) project(endpoint gitlab.GitLaber, name, which string) (*glab.Project, error) {
-	proj, resp, err := endpoint.GetProject(name)
+	proj, resp, err := endpoint.GetProject(name, nil)
 	if resp == nil {
-		return nil, errors.New("network error while fetching project info: nil response")
+		return nil, eris.Wrap(err, "get project")
 	}
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("%s project '%s' not found", which, name)
@@ -90,7 +97,7 @@ func (m *Migration) SourceProject(name string) (*glab.Project, error) {
 }
 
 func (m *Migration) DestProject(name string) (*glab.Project, error) {
-	p, err := m.project(m.Endpoint.SrcClient, name, "target")
+	p, err := m.project(m.Endpoint.DstClient, name, "target")
 	if err != nil {
 		return nil, err
 	}
@@ -119,10 +126,11 @@ func (m *Migration) migrateIssue(issueID int) error {
 			return errDuplicateIssue
 		}
 	}
+	labels := make(glab.Labels, 0)
 	iopts := &glab.CreateIssueOptions{
 		Title:       &issue.Title,
 		Description: &issue.Description,
-		Labels:      make([]string, 0),
+		Labels:      &labels,
 	}
 	if issue.Assignee.Username != "" {
 		// Assigned, does target user exist?
@@ -131,12 +139,12 @@ func (m *Migration) migrateIssue(issueID int) error {
 		if err == nil {
 			for _, u := range users {
 				if u.Username == issue.Assignee.Username {
-					iopts.AssigneeIDs = []int{u.ID}
+					iopts.AssigneeIDs = &[]int{u.ID}
 					break
 				}
 			}
 		} else {
-			return fmt.Errorf("target: error fetching users: %s", err.Error())
+			return fmt.Errorf("target: error fetching users: %v", err)
 		}
 	}
 	if issue.Milestone != nil && issue.Milestone.Title != "" {
@@ -171,7 +179,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 	}
 	// Copy existing labels.
 	for _, label := range issue.Labels {
-		iopts.Labels = append(iopts.Labels, label)
+		*iopts.Labels = append(*iopts.Labels, label)
 	}
 	// Create target issue if not existing (same name).
 	ni, resp, err := target.CreateIssue(tarProjectID, iopts)
@@ -179,7 +187,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		if resp != nil && resp.StatusCode == http.StatusRequestURITooLong {
 			fmt.Printf("target: caught a %q error, shortening issue's decription length ...\n", http.StatusText(resp.StatusCode))
 			if len(*iopts.Description) == 0 {
-				return fmt.Errorf("target: error creating issue: no description but %q error ...\n", http.StatusText(resp.StatusCode))
+				return fmt.Errorf("target: error creating issue: no description but %q error", http.StatusText(resp.StatusCode))
 			}
 			smalld := (*iopts.Description)[:1024]
 			iopts.Description = &smalld
@@ -233,7 +241,8 @@ func (m *Migration) migrateIssue(issueID int) error {
 
 	if issue.State == "closed" {
 		event := "close"
-		_, _, err := target.UpdateIssue(tarProjectID, ni.IID, &glab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
+		_, _, err := target.UpdateIssue(tarProjectID, ni.IID,
+			&glab.UpdateIssueOptions{StateEvent: &event, Labels: &issue.Labels})
 		if err != nil {
 			return fmt.Errorf("target: error closing issue #%d: %s", ni.IID, err.Error())
 		}
@@ -260,7 +269,9 @@ func (m *Migration) migrateIssue(issueID int) error {
 			return fmt.Errorf("link to target issue: %s", err.Error())
 		}
 		nopt := buf.String()
-		opts := &glab.CreateIssueNoteOptions{&nopt}
+		opts := &glab.CreateIssueNoteOptions{
+			Body: &nopt,
+		}
 		_, _, err = target.CreateIssueNote(srcProjectID, issue.IID, opts)
 		if err != nil {
 			return fmt.Errorf("source: error adding closing note for issue #%d: %s", issue.IID, err.Error())
@@ -269,7 +280,8 @@ func (m *Migration) migrateIssue(issueID int) error {
 	// Auto close source issue if needed
 	if m.params.SrcPrj.AutoCloseIssues {
 		event := "close"
-		_, _, err := source.UpdateIssue(srcProjectID, issue.ID, &glab.UpdateIssueOptions{StateEvent: &event, Labels: issue.Labels})
+		_, _, err := source.UpdateIssue(srcProjectID, issue.ID,
+			&glab.UpdateIssueOptions{StateEvent: &event, Labels: &issue.Labels})
 		if err != nil {
 			return fmt.Errorf("source: error closing issue #%d: %s", issue.IID, err.Error())
 		}
@@ -279,25 +291,25 @@ func (m *Migration) migrateIssue(issueID int) error {
 	return nil
 }
 
-type issueId struct {
+type issueID struct {
 	IID, ID int
 }
 
-type byIID []issueId
+type byIID []issueID
 
 func (a byIID) Len() int           { return len(a) }
 func (a byIID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byIID) Less(i, j int) bool { return a[i].IID < a[j].IID }
 
-// Performs the issues migration.
+// Migrate performs the issues migration.
 func (m *Migration) Migrate() error {
 	_, err := m.SourceProject(m.params.SrcPrj.Name)
 	if err != nil {
-		return err
+		return eris.Wrap(err, "migrate")
 	}
 	_, err = m.DestProject(m.params.DstPrj.Name)
 	if err != nil {
-		return err
+		return eris.Wrap(err, "migrate")
 	}
 
 	source := m.Endpoint.SrcClient
@@ -310,7 +322,7 @@ func (m *Migration) Migrate() error {
 	optSort := "asc"
 	opts := &glab.ListProjectIssuesOptions{Sort: &optSort, ListOptions: glab.ListOptions{PerPage: ResultsPerPage, Page: curPage}}
 
-	s := make([]issueId, 0)
+	s := make([]issueID, 0)
 
 	// Copy all source labels on target
 	labels, _, err := source.ListLabels(srcProjectID, nil)
@@ -380,7 +392,7 @@ func (m *Migration) Migrate() error {
 		}
 
 		for _, issue := range issues {
-			s = append(s, issueId{IID: issue.IID, ID: issue.ID})
+			s = append(s, issueID{IID: issue.IID, ID: issue.ID})
 		}
 		curPage++
 		opts.Page = curPage

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/gotsunami/gitlab-copy/config"
+	"github.com/gotsunami/gitlab-copy/gitlab"
 	"github.com/gotsunami/gitlab-copy/migration"
 	"github.com/gotsunami/gitlab-copy/stats"
 )
@@ -50,6 +51,7 @@ Options:
 	}
 
 	apply := flag.Bool("y", false, "apply migration for real")
+	insecure := flag.Bool("k", false, "skip TLS verification process")
 	version := flag.Bool("version", false, "")
 	flag.Parse()
 
@@ -76,6 +78,11 @@ Options:
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if *insecure {
+		gitlab.SkipTLSVerificationProcess()
+	}
+	gitlab.UseService(gitlab.NewClient())
 
 	if !*apply {
 		fmt.Println("DUMMY MODE: won't apply anything (stats only)\n--")
