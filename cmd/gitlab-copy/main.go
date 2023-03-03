@@ -51,6 +51,7 @@ Options:
 	}
 
 	apply := flag.Bool("y", false, "apply migration for real")
+	insecure := flag.Bool("k", false, "skip TLS verification process")
 	version := flag.Bool("version", false, "")
 	flag.Parse()
 
@@ -78,6 +79,9 @@ Options:
 		log.Fatal(err)
 	}
 
+	if *insecure {
+		gitlab.SkipTLSVerificationProcess()
+	}
 	gitlab.UseService(gitlab.NewClient())
 
 	if !*apply {

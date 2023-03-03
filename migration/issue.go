@@ -76,7 +76,7 @@ func New(c *config.Config) (*Migration, error) {
 func (m *Migration) project(endpoint gitlab.GitLaber, name, which string) (*glab.Project, error) {
 	proj, resp, err := endpoint.GetProject(name, nil)
 	if resp == nil {
-		return nil, errors.New("network error while fetching project info: nil response")
+		return nil, eris.Wrap(err, "get project")
 	}
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, fmt.Errorf("%s project '%s' not found", which, name)

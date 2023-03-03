@@ -1,8 +1,11 @@
 package gitlab
 
 import (
+	"crypto/tls"
+	"net/http"
 	"net/url"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rotisserie/eris"
 	glab "github.com/xanzy/go-gitlab"
 )
@@ -18,9 +21,27 @@ func NewClient() GitLaber {
 	return new(client)
 }
 
+var skipTLSVerification bool
+
+// SkipTLSVerificationProcess skips the TLS verfication process by using a custom HTTP transport.
+func SkipTLSVerificationProcess() {
+	skipTLSVerification = true
+}
+
 // WithToken sets the token to use, along with any client options.
 func (c *client) WithToken(token string, options ...glab.ClientOptionFunc) (GitLaber, error) {
 	f := new(client)
+
+	if skipTLSVerification {
+		// Setup a custom HTTP client to ignore TLS issues.
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		hc := retryablehttp.NewClient()
+		hc.HTTPClient.Transport = tr
+		options = append(options, glab.WithHTTPClient(hc.StandardClient()))
+	}
+
 	p, err := glab.NewClient(token, options...)
 	if err != nil {
 		return nil, eris.Wrap(err, "with token")
