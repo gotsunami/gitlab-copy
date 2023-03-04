@@ -23,7 +23,7 @@ func NewClient() GitLaber {
 
 var skipTLSVerification bool
 
-// SkipTLSVerificationProcess skips the TLS verfication process by using a custom HTTP transport.
+// SkipTLSVerificationProcess skips the TLS verification process by using a custom HTTP transport.
 func SkipTLSVerificationProcess() {
 	skipTLSVerification = true
 }

@@ -2,6 +2,7 @@
 # GitLab Copy
 
 [![Build Status](https://travis-ci.org/gotsunami/gitlab-copy.svg?branch=master)](https://travis-ci.org/gotsunami/gitlab-copy)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gotsunami/gitlab-copy)](https://goreportcard.com/report/github.com/gotsunami/gitlab-copy)
 
 `gitlab-copy` is a simple tool for copying issues/labels/milestones/notes from one GitLab project to another, possibly running on different GitLab instances.
 
@@ -17,8 +18,8 @@ Installing `gitlab-copy` is very easy since it comes as a static binary with no 
 
 The following features are available:
 
-- Support for GitLab instances with self-signed TLS certificates by using the `-k` CLI flag (since `v0.8`)
-- Support for different GitLab hosts/instances (since `v0.8`)
+- Support for GitLab instances with self-signed TLS certificates by using the `-k` CLI flag (since `v0.8.0`)
+- Support for different GitLab hosts/instances (since `v0.8.0`)
 - Copy milestones if not existing on target (use `milestonesOnly` to copy milestones only, see below)
 - Copy all source labels on target (use `labelsOnly` to copy labels only, see below)
 - Copy issues if not existing on target (by title)
@@ -62,7 +63,7 @@ instances (they can be the same):
 $ ./gitlab-copy -y gitlab.yml
 ```
 
-If one of the GitLab instances uses a self-signed TLS certificate, use the `-k` flag (available in `v0.8`) to skip the TLS verification process:
+If one of the GitLab instances uses a self-signed TLS certificate, use the `-k` flag (available in `v0.8.0`) to skip the TLS verification process:
 
 ```
 $ ./gitlab-copy -k -y gitlab.yml
