@@ -5,10 +5,10 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/go-yaml/yaml"
 	"github.com/gotsunami/gitlab-copy/gitlab"
 	"github.com/rotisserie/eris"
 	glab "github.com/xanzy/go-gitlab"
+	"gopkg.in/yaml.v3"
 )
 
 const (

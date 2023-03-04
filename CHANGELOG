@@ -1,3 +1,6 @@
+v 0.8.1
+- Fix dependencies security issues. #61
+
 v 0.8.0
 - Use go.mod instead of Gopkg and upgrade dependencies. #55
 - Built with Go 1.20.1
