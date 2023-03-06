@@ -1,9 +1,11 @@
 v 0.8.1
-- Fix dependencies security issues. #61
+  - build: refac the way git revisions are passed to the compiler. #65
+  - Add Go report card badge into README. #59
+  - Fix dependencies security issues. #61
 
 v 0.8.0
-- Use go.mod instead of Gopkg and upgrade dependencies. #55
-- Built with Go 1.20.1
+  - Use go.mod instead of Gopkg and upgrade dependencies. #55
+  - Built with Go 1.20.1
 
 v 0.7.0
   - Use GitLab API v4. #29

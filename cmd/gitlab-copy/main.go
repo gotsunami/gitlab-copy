@@ -56,11 +56,11 @@ Options:
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("Version:      %s\n", Version)
-		fmt.Printf("Git revision: %s\n", GitRevision)
-		fmt.Printf("Git branch:   %s\n", GitBranch)
+		fmt.Printf("Version:      %s\n", config.Version)
+		fmt.Printf("Git revision: %s\n", config.GitRev)
+		fmt.Printf("Git branch:   %s\n", config.GitBranch)
 		fmt.Printf("Go version:   %s\n", runtime.Version())
-		fmt.Printf("Built:        %s\n", Built)
+		fmt.Printf("Built:        %s\n", config.BuildDate)
 		fmt.Printf("OS/Arch:      %s/%s\n", runtime.GOOS, runtime.GOARCH)
 		os.Exit(0)
 	}

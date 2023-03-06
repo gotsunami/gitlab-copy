@@ -3,7 +3,6 @@ pkg
 *.swp
 tags
 .cover
-cmd/gitlab-copy/version.go
 dist
 public
 ssl
