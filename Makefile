@@ -26,13 +26,19 @@ test:
 	@go test ./... -coverprofile=/tmp/cover.out
 	@go tool cover -html=/tmp/cover.out -o /tmp/coverage.html
 
+checksum:
+	@for f in ${DISTDIR}/*; do \
+		sha256sum $$f > $$f.sha256; \
+		sed -i 's,${DISTDIR}/,,' $$f.sha256; \
+	done
+
 coverage:
 	@./tools/coverage.sh `pwd`
 
 htmlcoverage:
 	@./tools/coverage.sh --html `pwd`
 
-dist: cleardist buildall zip sourcearchive 
+dist: cleardist buildall zip sourcearchive checksum
 
 zip: linux darwin freebsd openbsd windows
 	@rm -rf ${GCDIR}
@@ -71,8 +77,8 @@ sourcearchive:
 	@gzip ${DISTDIR}/${VERSION}.tar
 	@echo ${DISTDIR}/${VERSION}.tar.gz
 
-cleardist:
-	@rm -rf ${DISTDIR} && mkdir -p ${GCDIR}
+cleardist: clean
+	mkdir -p ${GCDIR}
 
 clean:
 	@rm -rf bin pkg ${DISTDIR}
