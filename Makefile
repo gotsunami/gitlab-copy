@@ -1,12 +1,12 @@
+.PHONY: build dist linux darwin windows buildall cleardist clean
 
-.PHONY: build dist linux darwin windows buildall version cleardist clean
+include version.mk
 
 BIN=gitlab-copy
 WINDOWS_BIN=${BIN}.exe
 DISTDIR=dist
 GCDIR=${DISTDIR}/${BIN}
 #
-VERSION=`git describe --tags --always`
 GC_VERSION=${BIN}-${VERSION}
 GC_DARWIN_AMD64=${GC_VERSION}-darwin-amd64
 GC_FREEBSD_AMD64=${GC_VERSION}-freebsd-amd64
@@ -19,10 +19,10 @@ MAIN_CMD=github.com/gotsunami/${BIN}/cmd/${BIN}
 
 all: build
 
-build: version
-	@go build -v -o bin/${BIN} ${MAIN_CMD}
+build:
+	@go build -ldflags "all=$(GO_LDFLAGS)" -o bin/${BIN} ${MAIN_CMD}
 
-test: version
+test:
 	@go test ./... -coverprofile=/tmp/cover.out
 	@go tool cover -html=/tmp/cover.out -o /tmp/coverage.html
 
@@ -57,23 +57,19 @@ openbsd:
 	@cp bin/${GC_VERSION}-openbsd* ${GCDIR}/${BIN} && \
 		(cd ${DISTDIR} && zip -r ${GC_OPENBSD_AMD64}.zip ${BIN})
 
-buildall: version
+buildall:
 	@GOOS=darwin ${GB_BUILD64} -v -o bin/${GC_DARWIN_AMD64} ${MAIN_CMD}
 	@GOOS=freebsd ${GB_BUILD64} -v -o bin/${GC_FREEBSD_AMD64} ${MAIN_CMD}
 	@GOOS=openbsd ${GB_BUILD64} -v -o bin/${GC_OPENBSD_AMD64} ${MAIN_CMD}
 	@GOOS=linux ${GB_BUILD64} -v -o bin/${GC_LINUX_AMD64} ${MAIN_CMD}
 	@GOOS=windows ${GB_BUILD64} -v -o bin/${GC_WINDOWS_AMD64} ${MAIN_CMD}
 
-sourcearchive: version
+sourcearchive:
 	@git archive --format=zip -o ${DISTDIR}/${VERSION}.zip ${VERSION}
 	@echo ${DISTDIR}/${VERSION}.zip
 	@git archive -o ${DISTDIR}/${VERSION}.tar ${VERSION}
 	@gzip ${DISTDIR}/${VERSION}.tar
 	@echo ${DISTDIR}/${VERSION}.tar.gz
-
-version:
-	@mkdir -p ${GCDIR}
-	@./tools/version.sh
 
 cleardist:
 	@rm -rf ${DISTDIR} && mkdir -p ${GCDIR}
