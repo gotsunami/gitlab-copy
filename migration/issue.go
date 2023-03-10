@@ -132,7 +132,7 @@ func (m *Migration) migrateIssue(issueID int) error {
 		Description: &issue.Description,
 		Labels:      &labels,
 	}
-	if issue.Assignee.Username != "" {
+	if issue.Assignee != nil && issue.Assignee.Username != "" {
 		// Assigned, does target user exist?
 		// User may have a different ID on target
 		users, _, err := target.ListUsers(nil)

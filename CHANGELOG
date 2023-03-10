@@ -1,3 +1,6 @@
+v 0.8.2
+  - migrate: panic on nil pointer. #66
+
 v 0.8.1
   - build: refac the way git revisions are passed to the compiler. #65
   - Add Go report card badge into README. #59
