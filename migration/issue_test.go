@@ -65,6 +65,23 @@ func TestMigrate(t *testing.T) {
 			},
 		},
 		{
+			"copy multiple pages labels",
+			cfg1,
+			func(src, dst *fakeClient) {
+				src.labels = makeLabels("bug", "doc")
+				src.labelsPage2 = makeLabels("foo", "bar")
+			},
+			func(err error, src, dst *fakeClient) {
+				require.NoError(err)
+				if assert.Equal(4, len(dst.labels)) {
+					assert.Equal("bug", dst.labels[0].Name)
+					assert.Equal("doc", dst.labels[1].Name)
+					assert.Equal("foo", dst.labels[2].Name)
+					assert.Equal("bar", dst.labels[3].Name)
+				}
+			},
+		},
+		{
 			"copy 1 label and 2 issues",
 			cfg2,
 			func(src, dst *fakeClient) {

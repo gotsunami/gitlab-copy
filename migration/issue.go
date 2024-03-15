@@ -23,6 +23,7 @@ var (
 const (
 	// ResultsPerPage is the Number of results per page.
 	ResultsPerPage = 100
+	LabelsPerPage = 100
 )
 
 // Endpoint refers to the GitLab server endpoints.
@@ -325,10 +326,21 @@ func (m *Migration) Migrate() error {
 	s := make([]issueID, 0)
 
 	// Copy all source labels on target
-	labels, _, err := source.ListLabels(srcProjectID, nil)
-	if err != nil {
-		return fmt.Errorf("source: can't fetch labels: %s", err.Error())
+	currentLabelPage := 1
+	labels := make([]*glab.Label, 0)
+	for {
+		paginatedLabels, _, err := source.ListLabels(srcProjectID, &glab.ListLabelsOptions{PerPage: LabelsPerPage, Page: currentLabelPage})
+		if err != nil {
+			return fmt.Errorf("source: can't fetch labels: %s", err.Error())
+		}
+		if len(paginatedLabels) == 0 {
+			break
+		}
+
+		labels = append(labels, paginatedLabels...)
+		currentLabelPage++
 	}
+
 	fmt.Printf("Found %d labels ...\n", len(labels))
 	for _, label := range labels {
 		clopts := &glab.CreateLabelOptions{Name: &label.Name, Color: &label.Color, Description: &label.Description}
